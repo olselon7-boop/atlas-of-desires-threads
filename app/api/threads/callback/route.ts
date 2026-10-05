@@ -24,12 +24,7 @@ export async function GET(request: NextRequest) {
     const short = await exchangeCode(code);
     const long = await exchangeLongLived(short.access_token);
 
-    const response = NextResponse.json({
-      message: "Threads authorization successful",
-      user_id: short.user_id ?? null,
-      token_type: long.token_type ?? null,
-      expires_in: long.expires_in ?? null,
-    });
+    const response = NextResponse.redirect(new URL("/research", request.url));
 
     response.cookies.delete("threads_oauth_state");
     response.cookies.set("threads_access_token", long.access_token, {

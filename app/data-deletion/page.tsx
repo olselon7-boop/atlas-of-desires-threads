@@ -6,7 +6,7 @@ export default async function DataDeletionPage({
   const { code } = await searchParams;
 
   return (
-    <main>
+    <main className="deletion">
       <h1>Data deletion request</h1>
       <p>Your request was received.</p>
       {code ? (

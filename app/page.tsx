@@ -1,12 +1,3 @@
 export default function Home() {
-  return (
-    <main>
-      <h1>Atlas of Desires — Threads API</h1>
-      <p>Separate integration service for Meta Threads.</p>
-      <ul>
-        <li><a href="/api/threads/status">/api/threads/status</a></li>
-        <li><a href="/api/threads/auth">/api/threads/auth</a></li>
-      </ul>
-    </main>
-  );
+  return <main className="landing"><p className="eyebrow">Атлас желаний · исследование / 2026</p><h1>Память<br /><em>о будущем.</em></h1><p className="lead">Публично высказанные мечты становятся материалом живого архива. Из множества голосов — к одному человеческому высказыванию.</p><a className="entry" href="/research">Открыть исследовательский контур →</a><footer>Первый этап — собрать и прочитать реальный корпус. Художественная форма вырастет из материала.</footer></main>;
 }

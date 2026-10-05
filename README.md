@@ -45,3 +45,18 @@ The current integration does not persist collected posts or tokens in a database
 - Data deletion callback: https://atlas-of-desires-threads.vercel.app/api/threads/delete
 
 Start user authorization at https://atlas-of-desires-threads.vercel.app/api/threads/auth after configuring the OAuth redirect in Meta. In development mode, use an account with the appropriate app role.
+
+## Research collector
+
+Open `/research` in the same browser used for Threads authorization. Successful OAuth returns here automatically.
+
+1. Choose a Russian or English desire formula and collect one results page.
+2. Fetch further pages with the opaque cursor; duplicate post IDs merge without resetting manual review.
+3. Read original posts and mark them as keep/exclude. Rules only suggest a candidate and modality; they do not establish intent or semantic clusters.
+4. Export JSON after each session. The versioned corpus is stored in this browser only, with original text, timestamps, source references, search provenance, optional media URLs, separate rule interpretation and review. Usernames/profile metadata are not stored in the corpus, but text and links can identify people. Treat the export as research material, not an anonymized exhibition dataset.
+
+The `/api/threads/corpus?q=...&after=...` route requires a Threads token and never exposes upstream pagination URLs or tokens. Geography remains unknown. Media URLs can expire; media bytes and carousel children are not archived. The first target is 1,000–3,000 unique posts, to be reviewed before artwork morphology is finalized.
+
+No shared database, scheduled collection, AI semantic classification, image analysis or embeddings have been provisioned yet. The research page does not create synthetic wishes.
+
+Validation: `npm test`, `npm run typecheck`, `npm run build`.
