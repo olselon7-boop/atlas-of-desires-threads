@@ -24,3 +24,9 @@ test("upstream permission errors do not become empty successful corpora", async 
   try { await assert.rejects(keywordSearch("I dream", "test"), /Missing keyword permission/); }
   finally { globalThis.fetch = original; }
 });
+test("unexpected successful payload is not treated as zero posts", async () => {
+  const original = globalThis.fetch;
+  globalThis.fetch = async () => new Response(JSON.stringify({ unexpected: true }), { status: 200 });
+  try { await assert.rejects(keywordSearch("dream", "test"), /data is not an array/); }
+  finally { globalThis.fetch = original; }
+});

@@ -62,11 +62,11 @@ export async function exchangeLongLived(shortToken: string) {
   return data as { access_token: string; token_type?: string; expires_in?: number };
 }
 
-export async function keywordSearch(q: string, token: string, after?: string) {
+export async function keywordSearch(q: string, token: string, after?: string, searchType: "TOP" | "RECENT" = "RECENT", minimal = false) {
   const url = new URL(`${THREADS_API}/keyword_search`);
   url.searchParams.set("q", q);
-  url.searchParams.set("search_type", "RECENT");
-  url.searchParams.set("fields", "id,text,username,timestamp,permalink,media_type,media_url,thumbnail_url");
+  url.searchParams.set("search_type", searchType);
+  url.searchParams.set("fields", minimal ? "id,text" : "id,text,username,timestamp,permalink,media_type,media_url,thumbnail_url");
   url.searchParams.set("limit", "50");
   if (after) url.searchParams.set("after", after);
   url.searchParams.set("access_token", token);
@@ -78,6 +78,7 @@ export async function keywordSearch(q: string, token: string, after?: string) {
     (e as Error & { meta?: unknown }).meta = data?.error;
     throw e;
   }
+  if (!Array.isArray(data?.data)) throw new Error("Threads returned an unexpected response: data is not an array");
   return data as { data?: Array<Record<string, unknown>>; paging?: { cursors?: { after?: string }; next?: string } };
 }
 
