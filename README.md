@@ -37,3 +37,11 @@ Never commit credentials. Redeploy after changing Vercel environment variables.
 Configure the OAuth callback and the deauthorization/data deletion callback URLs in the Meta Threads application using the production domain above.
 
 The current integration does not persist collected posts or tokens in a database. Full OAuth and keyword search verification requires valid Meta credentials, an authorized Threads user, and the appropriate application permissions.
+
+## Meta callback URLs
+
+- OAuth redirect: https://atlas-of-desires-threads.vercel.app/api/threads/callback
+- Deauthorization: https://atlas-of-desires-threads.vercel.app/api/threads/deauthorize
+- Data deletion callback: https://atlas-of-desires-threads.vercel.app/api/threads/delete
+
+Start user authorization at https://atlas-of-desires-threads.vercel.app/api/threads/auth after configuring the OAuth redirect in Meta. In development mode, use an account with the appropriate app role.
