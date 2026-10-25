@@ -48,7 +48,7 @@ function normalizeToken(token: string) {
   let t = token.toLowerCase().replace(/ё/g, "е");
   if (/^[a-z]+$/.test(t)) {
     t = t.replace(/(?:ing|edly|edly|ed|ly|ies|s)$/i, "");
-  } else if (/^[а-я]+$/i.test(t) && t.length > 5) {
+  } else if (/^[а-я]+$/i.test(t) && t.length > 3) {
     t = t.replace(/(?:иями|ями|ами|ого|ему|ому|ыми|ими|ий|ый|ой|ая|яя|ое|ее|ую|юю|ам|ям|ах|ях|ов|ев|ей|ом|ем|ы|и|а|я|у|ю|е)$/iu, "");
   }
   return t;
