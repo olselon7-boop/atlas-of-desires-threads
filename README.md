@@ -4,7 +4,7 @@ Standalone integration service for Meta Threads, separate from the earlier atlas
 
 ## Purpose
 
-Threads API → public-post search → normalization → later semantic analysis and clustering → museum visualization.
+Threads API + Bluesky public search → normalization → dream-state/agency detection → manual review → later semantic analysis, temporal linking and clustering → museum visualization.
 
 ## Deployment
 
@@ -46,17 +46,26 @@ The current integration does not persist collected posts or tokens in a database
 
 Start user authorization at https://atlas-of-desires-threads.vercel.app/api/threads/auth after configuring the OAuth redirect in Meta. In development mode, use an account with the appropriate app role.
 
+## Live research sources
+
+- **Bluesky**: public live search through the official public AppView endpoint; no Meta authorization is required.
+- **Threads**: existing Meta Threads API integration; public search remains subject to the app's permissions and review state.
+
+The unified research record now distinguishes preliminary dream trajectories: `dreaming`, `stalled`, `struggling`, `fulfilled_passive`, `fulfilled_active`, `abandoned`, and `transformed`. It also records preliminary agency (`self`, `external`, `mixed`, `unknown`). These labels are research hypotheses and require manual review.
+
+For Bluesky, a stable pseudonymous `author_key` is generated server-side so future work can investigate repeated statements and possible time-to-fulfillment trajectories without putting account identifiers into the research record. Pseudonymization is not anonymity.
+
 ## Research collector
 
 Open `/research` in the same browser used for Threads authorization. Successful OAuth returns here automatically.
 
-1. Choose a Russian or English desire formula and collect one results page.
+1. Choose Bluesky or Threads, then choose a Russian or English formula for a dream state and collect one results page.
 2. Fetch further pages with the opaque cursor; duplicate post IDs merge without resetting manual review.
 3. Read original posts and mark them as keep/exclude. Rules only suggest a candidate and modality; they do not establish intent or semantic clusters.
 4. Export JSON after each session. The versioned corpus is stored in this browser only, with original text, timestamps, source references, search provenance, optional media URLs, separate rule interpretation and review. Usernames/profile metadata are not stored in the corpus, but text and links can identify people. Treat the export as research material, not an anonymized exhibition dataset.
 
 The `/api/threads/corpus?q=...&after=...` route requires a Threads token and never exposes upstream pagination URLs or tokens. Geography remains unknown. Media URLs can expire; media bytes and carousel children are not archived. The first target is 1,000–3,000 unique posts, to be reviewed before artwork morphology is finalized.
 
-No shared database, scheduled collection, AI semantic classification, image analysis or embeddings have been provisioned yet. The research page does not create synthetic wishes.
+No shared database, scheduled collection, AI semantic classification, image analysis, cross-post trajectory linker or embeddings have been provisioned yet. The research page does not create synthetic wishes.
 
 Validation: `npm test`, `npm run typecheck`, `npm run build`.
