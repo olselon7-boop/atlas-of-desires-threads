@@ -53,15 +53,39 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: "Некорректный запрос или курсор страницы." }, { status: 400 });
   }
 
-  const upstream = new URL("https://public.api.bsky.app/xrpc/app.bsky.feed.searchPosts");
-  upstream.searchParams.set("q", q);
-  upstream.searchParams.set("limit", "50");
-  upstream.searchParams.set("sort", "latest");
-  if (cursor) upstream.searchParams.set("cursor", cursor);
-
   try {
+    const identifier = process.env.BSKY_IDENTIFIER;
+    const appPassword = process.env.BSKY_APP_PASSWORD;
+    let endpoint = "https://public.api.bsky.app";
+    let authorization: string | undefined;
+
+    if (identifier && appPassword) {
+      const sessionResponse = await fetch("https://bsky.social/xrpc/com.atproto.server.createSession", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Accept: "application/json" },
+        body: JSON.stringify({ identifier, password: appPassword }),
+        cache: "no-store",
+      });
+      const session = await sessionResponse.json().catch(() => null) as { accessJwt?: unknown; did?: unknown } | null;
+      if (!sessionResponse.ok || typeof session?.accessJwt !== "string") {
+        throw new Error("Bluesky authentication failed. Check BSKY_IDENTIFIER / BSKY_APP_PASSWORD.");
+      }
+      endpoint = "https://bsky.social";
+      authorization = `Bearer ${session.accessJwt}`;
+    }
+
+    const upstream = new URL("/xrpc/app.bsky.feed.searchPosts", endpoint);
+    upstream.searchParams.set("q", q);
+    upstream.searchParams.set("limit", "50");
+    upstream.searchParams.set("sort", "latest");
+    if (cursor) upstream.searchParams.set("cursor", cursor);
+
     const response = await fetch(upstream, {
-      headers: { Accept: "application/json", "User-Agent": "AtlasOfDesires/0.2 research-art" },
+      headers: {
+        Accept: "application/json",
+        "User-Agent": "AtlasOfDesires/0.2 research-art",
+        ...(authorization ? { Authorization: authorization } : {}),
+      },
       cache: "no-store",
     });
 
