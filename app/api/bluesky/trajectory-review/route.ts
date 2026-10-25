@@ -41,6 +41,7 @@ type CandidatePost = {
 const STOP = new Set([
   "я","мы","мне","меня","мой","моя","мои","мою","это","эта","этот","что","чтобы","как","так","но","и","а","в","на","с","со","по","для","к","ко","из","у","о","об","же","бы","был","была","были","есть","уже","еще","ещё","все","всё","до","сих","пор","просто","очень","теперь","наконец","мечта","мечты","мечту","мечтаю","мечтал","мечтала","сбылась","исполнилась","исполнил","исполнила","осуществил","осуществила","реализовал","реализовала",
   "i","me","my","mine","we","our","this","that","the","a","an","and","or","but","to","of","for","in","on","at","with","from","is","are","was","were","be","been","it","so","just","really","finally","still","dream","dreams","dreaming","came","come","true","made","make","achieved","achieve",
+  "хочу","хотела","хотел","давно","буквально","раз","спасибо","больш","большое","месяц","год","лет","когда","тогда","потом","сейчас","сегодня","вообще","казалось",
 ]);
 
 function normalizeToken(token: string) {
@@ -58,16 +59,26 @@ function contentTokens(text: string) {
   return [...new Set(raw.map(normalizeToken).filter(t => t.length >= 3 && !STOP.has(t)))];
 }
 
+function conceptTokens(text: string) {
+  return [...new Set(contentTokens(text).map(token => token.length >= 5 ? token.slice(0, 4) : token))];
+}
+
+function isFirstPersonDream(text: string) {
+  const firstPerson = /(?:^|\b)(?:я|мне|меня|мой|моя|мою|мы|нам|наш|i|me|my|we|our)(?:\b|$)/iu.test(text);
+  const thirdPersonDream = /(?:он|она|они|he|she|they).{0,80}(?:мечтал|мечтала|мечтали|dreamed|dreamt|исполнил свою мечту|исполнила свою мечту)/iu.test(text);
+  return firstPerson && !thirdPersonDream;
+}
+
 function similarity(a: string, b: string) {
-  const ta = contentTokens(a);
-  const tb = contentTokens(b);
+  const ta = conceptTokens(a);
+  const tb = conceptTokens(b);
   const aSet = new Set(ta);
   const bSet = new Set(tb);
   const shared = [...aSet].filter(t => bSet.has(t));
   const union = new Set([...ta, ...tb]);
   const jaccard = union.size ? shared.length / union.size : 0;
   const containment = Math.min(ta.length, tb.length) ? shared.length / Math.min(ta.length, tb.length) : 0;
-  const score = Math.min(1, jaccard * 0.55 + containment * 0.45);
+  const score = Math.min(1, jaccard * 0.5 + containment * 0.5);
   return { score, shared: shared.slice(0, 10), tokensA: ta, tokensB: tb };
 }
 
@@ -175,12 +186,13 @@ export async function GET(request: NextRequest) {
           const before = sorted[i];
           const after = sorted[j];
           if (!BEFORE.has(before.state) || !AFTER.has(after.state)) continue;
+          if (!isFirstPersonDream(before.text) || !isFirstPersonDream(after.text)) continue;
           if (before.language !== after.language && before.language !== "unknown" && after.language !== "unknown") continue;
           const sim = similarity(before.text, after.text);
           const elapsedDays = before.createdAt && after.createdAt
             ? Math.round((new Date(after.createdAt).getTime() - new Date(before.createdAt).getTime()) / 86400000)
             : null;
-          const strongLexical = sim.shared.length >= 2 || sim.score >= 0.18;
+          const strongLexical = sim.shared.length >= 2 && sim.score >= 0.08;
           if (!strongLexical) continue;
           pairs.push({ authorKey: pseudoAuthor(did), score: sim.score, sharedTerms: sim.shared, elapsedDays, before, after });
         }
