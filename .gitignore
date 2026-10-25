@@ -9,3 +9,9 @@ out
 npm-debug.log*
 
 *.tsbuildinfo
+
+# Research corpora, analysis and identifiers stay outside source control.
+data/private_raw/
+data/art_ready/
+.env.*
+!.env.example

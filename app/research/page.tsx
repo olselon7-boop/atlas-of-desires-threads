@@ -10,6 +10,8 @@ import {
   type Review,
 } from "@/lib/desire";
 
+import { ResearchNav } from "@/components/research-tools";
+
 const STORAGE = "atlas-research-corpus-v2";
 type Status = { configured: boolean; hasAccessToken: boolean };
 
@@ -71,6 +73,7 @@ export default function Research() {
     if (!ready) return;
     try {
       localStorage.setItem(STORAGE, JSON.stringify({ version: 2, records }));
+      window.dispatchEvent(new Event("atlas-corpus-updated"));
     } catch {
       setError("Хранилище браузера переполнено или недоступно. Скачайте JSON, чтобы сохранить текущий корпус.");
     }
@@ -163,6 +166,8 @@ export default function Research() {
         <a href="/">АТЛАС ЖЕЛАНИЙ</a>
         <span>ИССЛЕДОВАТЕЛЬСКИЙ КОНТУР · 02 / ЖИЗНЬ МЕЧТЫ</span>
       </header>
+
+      <ResearchNav />
 
       <section className="intro">
         <p className="eyebrow">Архив ещё не случившегося</p>

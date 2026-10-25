@@ -69,3 +69,11 @@ The `/api/threads/corpus?q=...&after=...` route requires a Threads token and nev
 No shared database, scheduled collection, AI semantic classification, image analysis, cross-post trajectory linker or embeddings have been provisioned yet. The research page does not create synthetic wishes.
 
 Validation: `npm test`, `npm run typecheck`, `npm run build`.
+
+## Visual research and artwork
+
+- `/research/images`: real media, filters, explicit bounded server-side visual analysis.
+- `/research/trajectories`: same-object hypotheses and browser-local manual decisions.
+- `/atlas`: real-corpus WebGL organism and an experimental reviewed TIME mode.
+
+Use the existing local research corpus or import an exported JSON corpus in the new pages. Empty data stays empty; there are no demo dreams. See [visual-atlas.md](docs/visual-atlas.md) for environment variables, the optional controlled snapshot, API contracts, privacy, costs and validation limits.
