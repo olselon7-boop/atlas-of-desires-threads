@@ -1,12 +1,18 @@
 export const SEARCH_FORMULAS = [
   "я мечтаю",
-  "мечта сбылась",
-  "исполнил мечту",
+  "все еще мечтаю",
+  "до сих пор мечтаю",
   "мечтаю, но не получается",
+  "мечтаю, но не сбывается",
+  "мечта сбылась",
+  "мечта исполнилась",
+  "исполнил мечту",
+  "осуществил мечту",
+  "реализовал мечту",
   "I dream",
+  "still dreaming",
   "my dream came true",
-  "I made my dream come true",
-  "still dreaming"
+  "I made my dream come true"
 ];
 
 export type Review = "unreviewed" | "keep" | "exclude";
