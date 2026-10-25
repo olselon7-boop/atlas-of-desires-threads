@@ -1,3 +1,5 @@
+import type { VisualAnalysis } from "./visual-schema.ts";
+import type { DreamObject } from "./dream-object.ts";
 export const SEARCH_FORMULAS = [
   "я мечтаю",
   "все еще мечтаю",
@@ -55,6 +57,8 @@ export type DesireRecord = {
   };
   place: { city: null; country: null; source: null };
   review: Review;
+  visual_analysis?: VisualAnalysis;
+  dream_object?: DreamObject;
 };
 
 const modalityPatterns: [RegExp, NonNullable<DesireRecord["interpretation"]["modality"]>][] = [
@@ -71,10 +75,10 @@ const statePatterns: [RegExp, DesireState, Agency][] = [
   [/(?:пытаюсь|стараюсь|работаю над).{0,80}(?:мечт|цель)|\b(?:trying|working) (?:to|toward|towards).{0,80}\bdream\b/iu, "struggling", "self"],
   [/(?:перестал(?:а)? мечтать|отказал(?:ся|ась) от мечты|мечта больше не)|\b(?:gave up on|no longer have|stopped chasing) my dream\b/iu, "abandoned", "self"],
   [/(?:мечта изменилась|теперь мечтаю о|раньше мечтал(?:а)? о)|\bmy dream (?:changed|has changed)\b|\bi used to dream of\b/iu, "transformed", "mixed"],
-  [/(?:мечтаю|мечтаем|мечтает)|\bi dream(?: of| about)?\b|\bdreaming of\b/iu, "dreaming", "unknown"],
+  [/(?:мечтаю|мечтаем|мечтает|мечтал|мечтала)|\bi dream(?: of| about)?\b|\bdreaming of\b|\bstill dreaming\b/iu, "dreaming", "unknown"],
 ];
 
-const durationPattern = /\b\d+(?:[.,]\d+)?\s*(?:лет|года|год|месяц(?:а|ев)?|недел(?:я|и|ь)|дн(?:я|ей)|years?|months?|weeks?|days?)\b/iu;
+const durationPattern = /(?<![\p{L}\p{N}])\d+(?:[.,]\d+)?\s*(?:лет|года|год|месяц(?:а|ев)?|недел(?:я|и|ь)|дн(?:я|ей)|years?|months?|weeks?|days?)(?![\p{L}\p{N}])/iu;
 
 export function detectDesire(text: string): DesireRecord["interpretation"] {
   const modalityFound = modalityPatterns
