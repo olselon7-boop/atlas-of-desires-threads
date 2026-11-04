@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { detectDesire } from "@/lib/desire";
+import { enrichDesireText } from "@/lib/desire-enrichment";
 import { buildXSearchUrl, estimateXPostReadCost, X_HIGH_RECALL_QUERIES } from "@/lib/x";
 
 type XPost = {
@@ -102,6 +103,7 @@ export async function GET(request: NextRequest) {
     noiseHint: string;
     hasMedia: boolean;
     hasPlace: boolean;
+    enrichment: ReturnType<typeof enrichDesireText>;
   }> = [];
   const perQuery: Array<{
     language: "ru" | "en";
@@ -127,6 +129,7 @@ export async function GET(request: NextRequest) {
         noiseHint: noiseHint(post.text),
         hasMedia: Boolean(post.attachments?.media_keys?.length),
         hasPlace: Boolean(post.geo?.place_id),
+        enrichment: enrichDesireText(post.text),
       });
     }
     perQuery.push({ language: cell.language, query: cell.query, count: posts.length, uniqueCount: seen.size });
@@ -139,6 +142,9 @@ export async function GET(request: NextRequest) {
   const byLanguage: Record<string, number> = {};
   const byState: Record<string, number> = {};
   const byNoiseHint: Record<string, number> = {};
+  const byExpressionType: Record<string, number> = {};
+  const byDeepDesire: Record<string, number> = {};
+  let humanAspirations = 0;
   let withMedia = 0;
   let withPlace = 0;
 
@@ -146,6 +152,9 @@ export async function GET(request: NextRequest) {
     byLanguage[row.language] = (byLanguage[row.language] || 0) + 1;
     byState[row.detectedState] = (byState[row.detectedState] || 0) + 1;
     byNoiseHint[row.noiseHint] = (byNoiseHint[row.noiseHint] || 0) + 1;
+    byExpressionType[row.enrichment.expression_type] = (byExpressionType[row.enrichment.expression_type] || 0) + 1;
+    byDeepDesire[row.enrichment.deep_desire] = (byDeepDesire[row.enrichment.deep_desire] || 0) + 1;
+    if (row.enrichment.is_human_aspiration) humanAspirations++;
     if (row.hasMedia) withMedia++;
     if (row.hasPlace) withPlace++;
   }
@@ -160,6 +169,10 @@ export async function GET(request: NextRequest) {
     byLanguage,
     byState,
     byNoiseHint,
+    humanAspirations,
+    humanAspirationRate: unique.length ? Number((humanAspirations / unique.length).toFixed(3)) : 0,
+    byExpressionType,
+    byDeepDesire,
     withMedia,
     withPlace,
     perQuery,
@@ -172,6 +185,7 @@ export async function GET(request: NextRequest) {
       text: row.text,
       hasMedia: row.hasMedia,
       hasPlace: row.hasPlace,
+      enrichment: row.enrichment,
     })),
     warning: "High-recall exploration only. noiseHint is heuristic and not a validated aspiration classifier.",
   }, { headers: { "Cache-Control": "no-store", "X-Robots-Tag": "noindex" } });
