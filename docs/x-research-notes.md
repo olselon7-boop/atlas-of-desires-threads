@@ -177,3 +177,67 @@ Next required enrichment before historical interpretation:
 3. visual/media analysis for posts with images/video.
 4. manual review sample per year/language/state.
 5. only after filtering, compare themes across anchor years.
+
+
+## High-recall retrieval pilot — 2010 vs 2026
+
+Expanded query library:
+- 19 Russian formulas
+- 14 English formulas
+- includes aspiration, childhood/lifelong dream, becoming/living/moving/traveling, passive fulfillment, and active realization phrases
+- executed in batches of at most 5 queries to avoid Vercel serverless timeouts
+
+### 2026
+Retrieved before cross-batch dedup:
+- RU: 153
+- EN: 135
+- total: 288
+- estimated read cost: $1.44
+- media-bearing posts across batches: 69
+- explicit platform place signals across batches: 2
+
+Heuristic noise labels across batches:
+- candidate: 271
+- third_person: 6
+- other: 10
+- quote_or_lyrics: 1
+
+Rule-based state totals across batches:
+- dreaming: 73
+- fulfilled_passive: 24
+- fulfilled_active: 61
+- unknown: 130
+
+### 2010
+Retrieved before cross-batch dedup:
+- RU: 71
+- EN: 111
+- total: 182
+- estimated read cost: $0.91
+- media-bearing posts: 0
+- explicit platform place signals across batches: 29
+
+Heuristic observation:
+2010 is heavily dominated by legacy retweets despite -is:retweet in the modern search query. Old-style RT text survives as ordinary text in historical results, so a textual legacy-retweet filter is required before interpretation.
+
+### Early comparison
+The expanded retrieval layer increases coverage dramatically relative to the narrow anchor-year pilot:
+- 2026: ~57 anchor-sample posts -> 288 high-recall retrievals before cross-batch dedup
+- 2010: ~48 anchor-sample posts -> 182 high-recall retrievals before cross-batch dedup
+
+Do not interpret this as growth in the prevalence of dreaming over time. Retrieval behavior, platform scale, surviving historical data, language conventions, and query coverage all differ.
+
+### Next filter before theme analysis
+Persist and classify every retrieved row with:
+1. is_human_aspiration
+2. aspiration_subject: self / other / collective
+3. expression_type: aspiration / sleep_dream / quote_lyrics / joke_meme / advertisement / news / third_person / legacy_retweet / ambiguous
+4. canonical_desire
+5. deep_desire
+6. lifecycle_state
+7. agency
+8. media and visual role
+9. explicit place vs profile location vs mentioned place
+10. relation to parent/root conversation
+
+Only rows classified as first-person or clearly attributable human aspirations should enter the art-ready historical corpus.
