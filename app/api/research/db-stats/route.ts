@@ -18,7 +18,8 @@ export async function GET() {
       db.unsafe("select location_type, count(*)::int count from post_locations group by location_type order by count desc"),
       db.unsafe("select count(*)::int count, coalesce(sum(posts_received),0)::int received, coalesce(sum(posts_new),0)::int new_posts, coalesce(sum(estimated_cost_usd),0)::numeric cost from collection_runs where platform='x'")
     ]);
-    return NextResponse.json({ counts: counts[0], byLanguage: langs, byState: states, byDeepDesire: deep, byMediaType: media, byLocationType: places, xCollection: runs[0] });
+    const storage = await db.unsafe("select count(*) filter (where copy_status='copied')::int copied_images, coalesce(sum(storage_bytes) filter (where copy_status='copied'),0)::bigint copied_bytes, count(*) filter (where copy_status='failed')::int failed_copies from media_assets");
+    return NextResponse.json({ counts: counts[0], byLanguage: langs, byState: states, byDeepDesire: deep, byMediaType: media, byLocationType: places, storage: storage[0], xCollection: runs[0] });
   } finally {
     await db.end({ timeout: 2 });
   }
