@@ -128,13 +128,50 @@ export default function PrototypePage(){
         ctx.fillStyle=isSel?"rgba(240,244,226,.96)":n.d.has_media?"rgba(203,216,165,.78)":"rgba(225,226,216,.58)";
         ctx.fill();
 
-        if(z>.72 || isSel){
-          ctx.font=`${Math.max(10,11*scale)}px Georgia,serif`;
-          ctx.fillStyle=isSel?"rgba(246,246,238,.95)":"rgba(231,228,218,.72)";
-          const text=n.d.text.replace(/https?:\/\/\S+/g,"").slice(0,isSel?92:42);
-          ctx.fillText(text+(n.d.text.length>(isSel?92:42)?"…":""),x+r*2.8,y+4);
+        hit.push({x,y,r:Math.max(8,r*2),d:n.d,z,scale,isSel});
+      }
+
+      const labelBoxes:Array<{x:number;y:number;w:number;h:number}>=[];
+      const labelCandidates=(hit as any[])
+        .filter(h=>h.isSel || h.z>.82)
+        .sort((a,b)=>Number(b.isSel)-Number(a.isSel) || b.z-a.z)
+        .slice(0,12);
+
+      for(const h of labelCandidates){
+        const clean=h.d.text.replace(/https?:\/\/\S+/g,"").replace(/\s+/g," ").trim();
+        const maxChars=h.isSel?110:52;
+        const text=clean.slice(0,maxChars)+(clean.length>maxChars?"…":"");
+        const fontSize=h.isSel?18:Math.max(11,12*h.scale);
+        ctx.font=`${fontSize}px Georgia,serif`;
+        const metrics=ctx.measureText(text);
+        const padX=10,padY=7;
+        const bw=Math.min(metrics.width+padX*2,w*.42);
+        const bh=fontSize+padY*2;
+        let bx=h.x+h.r*2.6;
+        let by=h.y-bh/2;
+
+        if(bx+bw>w-18) bx=h.x-h.r*2.6-bw;
+        by=Math.max(18,Math.min(h-bh-18,by));
+
+        let guard=0;
+        while(labelBoxes.some(b=>!(bx+bw<b.x || bx>b.x+b.w || by+bh<b.y || by>b.y+b.h)) && guard<12){
+          by+=bh+6;
+          if(by+bh>h-18){by=18+guard*5;bx=Math.max(18,bx-bw*.18)}
+          guard++;
         }
-        hit.push({x,y,r:Math.max(8,r*2),d:n.d});
+
+        const overlaps=labelBoxes.some(b=>!(bx+bw<b.x || bx>b.x+b.w || by+bh<b.y || by>b.y+b.h));
+        if(overlaps && !h.isSel) continue;
+
+        ctx.fillStyle=h.isSel?"rgba(5,7,6,.94)":"rgba(5,7,6,.78)";
+        ctx.fillRect(bx,by,bw,bh);
+        ctx.strokeStyle=h.isSel?"rgba(203,216,165,.55)":"rgba(231,228,218,.12)";
+        ctx.strokeRect(bx+.5,by+.5,bw-1,bh-1);
+        ctx.fillStyle=h.isSel?"rgba(246,246,238,.97)":"rgba(231,228,218,.82)";
+        ctx.textBaseline="middle";
+        ctx.fillText(text,bx+padX,by+bh/2);
+        ctx.textBaseline="alphabetic";
+        labelBoxes.push({x:bx,y:by,w:bw,h:bh});
       }
 
       (canvas as any).__hits=hit;
