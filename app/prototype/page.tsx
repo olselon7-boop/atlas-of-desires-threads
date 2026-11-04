@@ -42,7 +42,7 @@ export default function PrototypePage(){
   const [selected,setSelected]=useState<Desire|null>(null);
   const [hovered,setHovered]=useState<Desire|null>(null);
   const [paused,setPaused]=useState(false);
-  const [speed,setSpeed]=useState(.55);
+  const [speed,setSpeed]=useState(1);
   const canvasRef=useRef<HTMLCanvasElement|null>(null);
 
   useEffect(()=>{
@@ -116,14 +116,14 @@ export default function PrototypePage(){
       const hit:Array<{x:number;y:number;r:number;d:Desire;z:number;scale:number;isSel:boolean}>=[];
       const sorted=[...nodes].sort((a,b)=>a.offset-b.offset);
       for(const n of sorted){
-        let z=(n.offset+t*.028+n.drift)%1;
+        let z=(n.offset+t*.052+n.drift)%1;
         if(z<0)z+=1;
         let visualZ=z;
-        if(z>.78 && z<.92){
-          const p=(z-.78)/.14;
-          visualZ=.78+p*.055;
-        } else if(z>=.92){
-          visualZ=.835+(z-.92)*2.05;
+        if(z>.805 && z<.875){
+          const p=(z-.805)/.07;
+          visualZ=.805+p*.018;
+        } else if(z>=.875){
+          visualZ=.823+(z-.875)*1.42;
         }
         const depth=visualZ*visualZ;
         const scale=.22+depth*1.75;
@@ -139,43 +139,47 @@ export default function PrototypePage(){
         hit.push({x,y,r:Math.max(8,r*2),d:n.d,z:visualZ,scale,isSel});
       }
 
-      const ambientLabels=(hit as any[])
+      const focusCandidates=(hit as any[])
         .filter(x=>!selected || x.d.id!==selected.id)
-        .filter(x=>x.z>.76)
-        .sort((a,b)=>b.z-a.z)
-        .slice(0,5);
+        .filter(x=>x.z>.79)
+        .sort((a,b)=>Math.abs(.825-a.z)-Math.abs(.825-b.z));
 
-      const boxes:Array<{x:number;y:number;w:number;h:number}>=[];
+      const primary=focusCandidates[0] || null;
+      const secondary=focusCandidates.slice(1,4);
 
-      for(const lh of ambientLabels){
-        const clean=lh.d.text.replace(/https?:\/\/\S+/g,"").replace(/\s+/g," ").trim();
-        if(!clean) continue;
-        const maxChars=lh.z>.88?72:56;
-        const txt=clean.slice(0,maxChars)+(clean.length>maxChars?"…":"");
-        const fs=lh.z>.88?19:15;
+      if(primary){
+        const clean=primary.d.text.replace(/https?:\/\/\S+/g,"").replace(/\s+/g," ").trim();
+        const txt=clean.slice(0,82)+(clean.length>82?"…":"");
+        const fs=22;
         ctx.font=`${fs}px Georgia,serif`;
         const m=ctx.measureText(txt);
-        const bw=Math.min(m.width,w*.34);
-        const bh=fs+6;
-        let bx=lh.x+lh.r*2.3;
-        let by=lh.y-bh/2;
-        if(bx+bw>w-18) bx=lh.x-lh.r*2.3-bw;
-        by=Math.max(18,Math.min(h-bh-18,by));
+        const maxW=w*.58;
+        const bw=Math.min(m.width,maxW);
+        let bx=primary.x+primary.r*2.7;
+        if(bx+bw>w-24) bx=Math.max(24,primary.x-primary.r*2.7-bw);
+        let by=Math.max(36,Math.min(h-90,primary.y-10));
 
-        let attempts=0;
-        while(boxes.some(b=>!(bx+bw<b.x || bx>b.x+b.w || by+bh<b.y || by>b.y+b.h)) && attempts<10){
-          by+=bh+8;
-          if(by+bh>h-18) by=Math.max(18,lh.y-(attempts+1)*(bh+8));
-          attempts++;
-        }
-        if(boxes.some(b=>!(bx+bw<b.x || bx>b.x+b.w || by+bh<b.y || by>b.y+b.h))) continue;
-
-        const alpha=.28+lh.z*.52;
-        ctx.fillStyle=`rgba(231,228,218,${alpha.toFixed(2)})`;
+        ctx.fillStyle="rgba(5,7,6,.78)";
+        ctx.fillRect(bx-10,by-fs,bw+20,fs+18);
+        ctx.fillStyle="rgba(244,244,234,.96)";
         ctx.textBaseline="middle";
-        ctx.fillText(txt,bx,by+bh/2);
+        ctx.fillText(txt,bx,by-fs*.2);
+
+        ctx.beginPath();
+        ctx.arc(primary.x,primary.y,Math.max(3,primary.r*.8),0,Math.PI*2);
+        ctx.fillStyle="rgba(203,216,165,.98)";
+        ctx.fill();
         ctx.textBaseline="alphabetic";
-        boxes.push({x:bx,y:by,w:bw,h:bh});
+      }
+
+      for(const lh of secondary){
+        const clean=lh.d.text.replace(/https?:\/\/\S+/g,"").replace(/\s+/g," ").trim();
+        const txt=clean.slice(0,34)+(clean.length>34?"…":"");
+        ctx.font="12px Georgia,serif";
+        ctx.fillStyle="rgba(231,228,218,.18)";
+        let bx=lh.x+lh.r*2.2;
+        if(bx>w*.82) bx=lh.x-lh.r*2.2-ctx.measureText(txt).width;
+        ctx.fillText(txt,bx,lh.y);
       }
 
       if(selected){
@@ -241,7 +245,7 @@ export default function PrototypePage(){
       <div className="protoYears">
         <span>2010</span><span>2012</span><span>2014</span><span>2016</span><span>2018</span><span>2020</span><span>2022</span><span>2024</span><span>2026</span>
       </div>
-      <div className="protoHint">HOVER TO READ · CLICK TO FOLLOW</div>
+      <div className="protoHint">READ THE FOCUS · HOVER / CLICK TO FOLLOW</div>
 
       {hovered && !selected && <div className="hoverDream">
         <span>{LABELS[hovered.deep_desire||"unknown"]||hovered.deep_desire||"UNKNOWN"}</span>
