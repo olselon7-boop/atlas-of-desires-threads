@@ -62,9 +62,18 @@ export async function GET(request: NextRequest) {
     ? [languageParam] as const
     : ["ru", "en"] as const;
 
-  const cells = languages.flatMap(language =>
+  const allCells = languages.flatMap(language =>
     X_HIGH_RECALL_QUERIES[language].map(query => ({ language, query }))
   );
+  const batchParam = params.get("batch");
+  const batchSize = 5;
+  const batch = batchParam == null ? null : Number(batchParam);
+  if (batch != null && (!Number.isInteger(batch) || batch < 0)) {
+    return NextResponse.json({ error: "Invalid batch." }, { status: 400 });
+  }
+  const cells = batch == null
+    ? allCells
+    : allCells.slice(batch * batchSize, batch * batchSize + batchSize);
 
   if (!execute) {
     const maxPosts = cells.length * 10;
@@ -73,10 +82,13 @@ export async function GET(request: NextRequest) {
       year,
       languages,
       queryCount: cells.length,
+      totalQueryCount: allCells.length,
+      batch,
+      batchSize,
       maxPosts,
       estimatedMaxReadCostUsd: estimateXPostReadCost(maxPosts),
       queries: cells,
-      note: "High-recall pilot. Run one language/year at a time with execute=1 to control cost and timeout risk.",
+      note: "High-recall pilot. Use batch=0,1,2... with execute=1; each batch runs at most 5 queries to avoid serverless timeouts.",
     }, { headers: { "Cache-Control": "no-store", "X-Robots-Tag": "noindex" } });
   }
 
