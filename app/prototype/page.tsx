@@ -38,118 +38,100 @@ function hash01(s:string){
 }
 
 
-type VisualMotif =
-  | "sea" | "home" | "car" | "plane" | "mountain" | "city"
-  | "child" | "stage" | "animal" | "money" | "love" | "road"
-  | "body" | "book" | "camera" | "generic";
 
-function detectVisualMotif(text:string):VisualMotif{
-  const t=text.toLowerCase();
-  const tests:Array<[VisualMotif,RegExp]>=[
-    ["sea",/(море|океан|пляж|берег|остров|sea|ocean|beach|coast|island)/i],
-    ["home",/(дом|квартир|жиль|дач|house|home|apartment|flat|cottage)/i],
-    ["car",/(машин|авто|bmw|mercedes|tesla|nissan|car|vehicle|motorcycle|мотоцикл)/i],
-    ["plane",/(самол[её]т|лететь|авиа|flight|plane|airplane|fly|flying)/i],
-    ["mountain",/(гор[аы]|вершин|скал|mountain|summit|peak|climb)/i],
-    ["city",/(город|мегаполис|москв|париж|лондон|нью.?йорк|city|moscow|paris|london|new york)/i],
-    ["child",/(реб[её]нок|дети|сын|дочь|малыш|child|children|baby|son|daughter)/i],
-    ["stage",/(сцен|концерт|театр|выступ|audience|stage|concert|theatre|perform)/i],
-    ["animal",/(собак|кот|кошк|лошад|щен|питом|dog|cat|horse|puppy|pet)/i],
-    ["money",/(деньг|богат|миллион|зарплат|доход|money|million|rich|salary|income)/i],
-    ["love",/(любов|любить|отношен|муж|жен|встретить|love|relationship|marry|wedding)/i],
-    ["road",/(поездк|путешеств|дорог|переех|переезд|travel|trip|journey|road|move abroad|moving)/i],
-    ["body",/(здоров|тело|похуд|спорт|бег|health|body|fit|fitness|run)/i],
-    ["book",/(книг|учиться|университет|образован|book|study|university|learn)/i],
-    ["camera",/(фото|фильм|кино|снимать|camera|photo|film|movie)/i],
-  ];
-  for(const [motif,re] of tests) if(re.test(t)) return motif;
-  return "generic";
+type Gesture =
+  | "rise" | "fall" | "wave" | "loop" | "return" | "open"
+  | "tighten" | "burst" | "zigzag" | "drift" | "climb" | "pulse"
+  | "circle" | "bridge" | "spiral" | "straight";
+
+function tokenizeDream(text:string){
+  return text
+    .toLowerCase()
+    .replace(/https?:\/\/\S+/g," ")
+    .replace(/[^a-zа-яё0-9\s-]/gi," ")
+    .split(/\s+/)
+    .filter(Boolean);
 }
 
-function motifPoint(motif:VisualMotif,u:number,seed:number){
+function tokenGesture(token:string):Gesture{
+  if(/(море|океан|волна|sea|ocean|beach|water)/i.test(token)) return "wave";
+  if(/(дом|квартир|жиль|home|house|apartment)/i.test(token)) return "return";
+  if(/(уехать|переех|лететь|поехать|travel|move|fly|trip|journey)/i.test(token)) return "rise";
+  if(/(машин|авто|car|tesla|bmw|nissan|motor)/i.test(token)) return "bridge";
+  if(/(люб|отнош|свад|love|marry|relationship|wedding)/i.test(token)) return "loop";
+  if(/(реб[её]н|дет|сын|доч|child|baby|son|daughter)/i.test(token)) return "circle";
+  if(/(гора|вершин|climb|mountain|peak|summit)/i.test(token)) return "climb";
+  if(/(город|city|moscow|paris|london|york)/i.test(token)) return "zigzag";
+  if(/(сцен|концерт|театр|stage|concert|perform)/i.test(token)) return "open";
+  if(/(деньг|миллион|богат|money|million|rich|income)/i.test(token)) return "pulse";
+  if(/(твор|рисов|писат|музык|create|art|paint|write|music)/i.test(token)) return "spiral";
+  if(/(учит|книг|универ|study|learn|book|university)/i.test(token)) return "climb";
+  if(/(спорт|здоров|бег|fitness|health|run|body)/i.test(token)) return "pulse";
+  if(/(страх|бою|неполуч|невозмож|stuck|afraid|fail|cannot|can't)/i.test(token)) return "tighten";
+  if(/(сбыл|исполнил|осуществил|реализовал|achieved|fulfilled|came|reality)/i.test(token)) return "burst";
+  if(/(вернут|назад|return|back)/i.test(token)) return "return";
+  if(/(свобод|freedom|free)/i.test(token)) return "open";
+  if(/(хочу|мечта|dream|wish|want)/i.test(token)) return "drift";
+  return "straight";
+}
+
+function buildGestureSequence(text:string, id:string):Gesture[]{
+  const tokens=tokenizeDream(text);
+  const seq:Gesture[]=[];
+  for(const token of tokens){
+    const g=tokenGesture(token);
+    if(g!=="straight" || hash01(token+id)>.72) seq.push(g);
+    if(seq.length>=9) break;
+  }
+  if(seq.length<3){
+    const fallback:Gesture[]=["drift","wave","open","loop","rise","pulse","zigzag"];
+    for(let i=seq.length;i<4;i++) seq.push(fallback[Math.floor(hash01(id+"f"+i)*fallback.length)]);
+  }
+  return seq;
+}
+
+function applyGesture(g:Gesture,u:number,seed:number){
   const s=u*2-1;
-  const a=u*Math.PI*2;
-  switch(motif){
-    case "sea":
-      return {x:s, y:.12*Math.sin(u*Math.PI*6)+.22*Math.sin(u*Math.PI*2)-.08};
-    case "home":
-      if(u<.2) return {x:-1+u*4.4,y:.28-u*1.4};
-      if(u<.4) return {x:-.12+(u-.2)*3.2,y:(u-.2)*2.1};
-      if(u<.58) return {x:.52-(u-.4)*2.9,y:.42-(u-.4)*2.4};
-      if(u<.8) return {x:(u-.58)*3.5-.02,y:-.02+(u-.58)*.25};
-      return {x:.75-(u-.8)*3.8,y:.04+(u-.8)*1.5};
-    case "car":
-      return {
-        x:s,
-        y:.18*Math.sin(Math.PI*u)
-          -.11*Math.sin(Math.PI*u*2)
-          +.12*Math.sin(Math.PI*u*4+seed*2)
-      };
-    case "plane":
-      return {
-        x:s,
-        y:-.42*s + .16*Math.sin(a) - .08*Math.sin(a*3)
-      };
-    case "mountain":
-      return {
-        x:s,
-        y:.38-Math.abs(Math.sin(u*Math.PI*3.1))*.72 + .05*Math.sin(a*5)
-      };
-    case "city":
-      return {
-        x:s,
-        y:.32-(Math.floor(u*7)%2? .46:.18) + .06*Math.sin(a*7)
-      };
-    case "child":
-      return {
-        x:.62*Math.sin(a)+s*.3,
-        y:.42*Math.sin(a*2)-.08*Math.cos(a)
-      };
-    case "stage":
-      return {
-        x:s,
-        y:-.35*Math.sin(u*Math.PI)+.26*Math.sin(u*Math.PI*2+seed)
-      };
-    case "animal":
-      return {
-        x:s*.85+.12*Math.sin(a*2),
-        y:.22*Math.sin(a*2)+.13*Math.sin(a*5+seed*3)
-      };
-    case "money":
-      return {
-        x:s*.7+.18*Math.sin(a*3),
-        y:.5-s*.45+.12*Math.sin(a*4)
-      };
-    case "love":
-      return {
-        x:.72*Math.sin(a),
-        y:-.5*Math.cos(a)+.2*Math.cos(a*2)-.16
-      };
-    case "road":
-      return {
-        x:s+.18*Math.sin(a),
-        y:-.34*Math.sin(u*Math.PI)+.1*Math.sin(a*3+seed*2)
-      };
-    case "body":
-      return {
-        x:s*.82,
-        y:.18*Math.sin(a*3)+.06*Math.sin(a*8+seed*5)
-      };
-    case "book":
-      return {
-        x:s,
-        y:.22*Math.sin(a*2)-.18*Math.sign(s)*Math.sin(u*Math.PI)
-      };
-    case "camera":
-      return {
-        x:s*.82+.12*Math.sin(a*2),
-        y:.26*Math.sin(a)+.12*Math.sin(a*4+seed)
-      };
-    default:
-      return {x:s,y:.25*Math.sin(a*1.5+seed*5)+.1*Math.sin(a*4)};
+  switch(g){
+    case "rise": return {x:s,y:.48-.72*u+.08*Math.sin(u*Math.PI*3+seed)};
+    case "fall": return {x:s,y:-.35+.65*u};
+    case "wave": return {x:s,y:.22*Math.sin(u*Math.PI*2.5+seed)};
+    case "loop": {
+      const a=u*Math.PI*2;
+      return {x:.72*Math.sin(a),y:-.5*Math.cos(a)+.18*Math.cos(a*2)};
+    }
+    case "return": {
+      const a=u*Math.PI*2;
+      return {x:.68*Math.cos(a)*(1-u*.15)+s*.25,y:.48*Math.sin(a)-.18*s};
+    }
+    case "open": return {x:s+.18*Math.sin(u*Math.PI),y:-.42*Math.sin(u*Math.PI)};
+    case "tighten": {
+      const a=u*Math.PI*5;
+      const r=.52*(1-u)+.07;
+      return {x:r*Math.cos(a)+s*.45,y:r*Math.sin(a)};
+    }
+    case "burst": {
+      const a=u*Math.PI*2;
+      const r=.12+.82*u;
+      return {x:r*Math.cos(a)+s*.28,y:r*Math.sin(a)*.65};
+    }
+    case "zigzag": return {x:s,y:.34*(Math.floor(u*8)%2?1:-1)*(1-u*.2)};
+    case "drift": return {x:s,y:.2*Math.sin(u*Math.PI*1.5+seed*3)};
+    case "climb": return {x:s,y:.52-.88*u+.1*Math.sin(u*Math.PI*5)};
+    case "pulse": return {x:s,y:.18*Math.sin(u*Math.PI*6)+.08*Math.sin(u*Math.PI*13+seed)};
+    case "circle": {
+      const a=u*Math.PI*2;
+      return {x:.55*Math.cos(a)+s*.38,y:.42*Math.sin(a)};
+    }
+    case "bridge": return {x:s,y:-.28*Math.sin(u*Math.PI)+.08*Math.sin(u*Math.PI*5)};
+    case "spiral": {
+      const a=u*Math.PI*4.5;
+      const r=.08+.72*u;
+      return {x:r*Math.cos(a)+s*.24,y:r*Math.sin(a)*.7};
+    }
+    default: return {x:s,y:0};
   }
 }
-
 
 function drawDreamStroke(
   ctx: CanvasRenderingContext2D,
@@ -161,40 +143,33 @@ function drawDreamStroke(
   selected: boolean
 ){
   const seed=hash01(d.id+"stroke");
-  const motif=detectVisualMotif(d.text);
-  const kind=d.deep_desire||"unknown";
-  const steps=56;
+  const gestures=buildGestureSequence(d.text,d.id);
+  const segs=gestures.length;
   const pts:Array<{x:number;y:number}>=[];
+  let cursorX=-1;
+  let cursorY=0;
 
-  for(let i=0;i<=steps;i++){
-    const u=i/steps;
-    const base=motifPoint(motif,u,seed);
-    let px=base.x;
-    let py=base.y;
+  for(let gi=0;gi<segs;gi++){
+    const g=gestures[gi];
+    const localSteps=10;
+    const amp=.72 + hash01(d.id+"amp"+gi)*.5;
+    const tilt=(hash01(d.text+"tilt"+gi)-.5)*.34;
 
-    const textSeed=hash01(d.text.slice(0,Math.max(1,Math.floor((u+.06)*d.text.length))));
-    const wordPulse=(textSeed-.5)*.12*Math.sin(u*Math.PI);
+    for(let j=0;j<=localSteps;j++){
+      const u=j/localSteps;
+      const p=applyGesture(g,u,seed+gi*.73);
+      const span=2/segs;
+      const targetX=-1 + (gi+u)*span;
+      const blend=.55;
+      const px=targetX*(1-blend)+(cursorX+p.x*span*.55)*blend;
+      const py=cursorY + p.y*amp + tilt*(u-.5);
 
-    if(kind==="freedom_independence"){
-      py-=.16*(u-.5);
-      px+=.06*Math.sin(u*Math.PI*2);
-    } else if(kind==="creativity_expression"){
-      py+=.07*Math.sin(u*Math.PI*7+seed*5);
-    } else if(kind==="home_belonging"){
-      px*=.9;
-      py+=.05*Math.cos(u*Math.PI*3);
-    } else if(kind==="travel_exploration"){
-      px+=.08*u;
-      py-=.06*Math.sin(u*Math.PI);
-    } else if(kind==="career_self_realization"){
-      py-=.1*u;
+      pts.push({x:x+px*size*1.18,y:y+py*size});
     }
 
-    const complexity=.55+hash01(d.text+"complexity")*.9;
-    py+=wordPulse*complexity;
-    px+=(hash01(d.id+"xwarp")-.5)*.08*Math.sin(u*Math.PI*3);
-
-    pts.push({x:x+px*size,y:y+py*size});
+    const last=pts[pts.length-1];
+    cursorX=(last.x-x)/(size*1.18);
+    cursorY=(last.y-y)/size*.38;
   }
 
   ctx.beginPath();
@@ -209,12 +184,12 @@ function drawDreamStroke(
   ctx.strokeStyle=selected
     ? "rgba(239,242,226,.98)"
     : `rgba(203,216,165,${alpha.toFixed(3)})`;
-  ctx.lineWidth=selected?2.05:1.08;
+  ctx.lineWidth=selected?2.15:1.1;
   ctx.lineCap="round";
   ctx.lineJoin="round";
   ctx.stroke();
 
-  return { radius:size*.98, motif };
+  return { radius:size*1.12, gestures };
 }
 
 export default function PrototypePage(){
@@ -310,7 +285,7 @@ export default function PrototypePage(){
         const x=cx+n.lane*w*.18*scale+Math.sin(t*.6+n.phase)*12*scale;
         const y=horizon+(visualZ-.18)*h*.48;
         const isSel=selected?.id===n.d.id;
-        const strokeSize=(12+visualZ*34)*(isSel?1.38:1);
+        const strokeSize=(16+visualZ*46)*(isSel?1.32:1);
         const alpha=.12+visualZ*.56+(n.d.has_media?.08:0);
         const shape=drawDreamStroke(ctx,n.d,x,y,strokeSize,Math.min(.82,alpha),isSel);
 
@@ -428,7 +403,7 @@ export default function PrototypePage(){
 
       {selected && <aside className="dreamCard">
         <button onClick={()=>setSelected(null)} aria-label="close">×</button>
-        <div className="dreamTag">{LABELS[selected.deep_desire||"unknown"]||selected.deep_desire||"UNKNOWN"} · {detectVisualMotif(selected.text).toUpperCase()}</div>
+        <div className="dreamTag">{LABELS[selected.deep_desire||"unknown"]||selected.deep_desire||"UNKNOWN"} · {buildGestureSequence(selected.text,selected.id).slice(0,4).join(" → ").toUpperCase()}</div>
         <blockquote>{selected.text}</blockquote>
         <div className="dreamGrid">
           <span>STATE<b>{selected.dream_state||"unknown"}</b></span>
