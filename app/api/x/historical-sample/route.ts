@@ -101,7 +101,8 @@ export async function GET(request: NextRequest) {
   const perCell: Array<{ period: string; language: string; query: string; count: number }> = [];
 
   for (const cell of cells) {
-    const body = await searchOne(cell.query, cell.start, cell.end, token);
+    const safeEnd = new Date(Math.min(new Date(cell.end).getTime(), Date.now() - 60_000)).toISOString();
+    const body = await searchOne(cell.query, cell.start, safeEnd, token);
     const posts = body.data || [];
     perCell.push({ period: cell.period, language: cell.language, query: cell.query, count: posts.length });
     for (const post of posts) {
@@ -166,6 +167,6 @@ export async function GET(request: NextRequest) {
       hasMedia: row.hasMedia,
       hasPlace: Boolean(row.placeId),
     })),
-    warning: "Pilot only. Raw author identifiers are intentionally omitted from the response sample.",
+    warning: "Pilot cross-section only. Search is sorted latest, so each multi-year stratum is dominated by the latest matching dates in that window. Treat results as anchor-year samples, not representative of the full period. Raw author identifiers are intentionally omitted from the response sample.",
   }, { headers: { "Cache-Control": "no-store", "X-Robots-Tag": "noindex" } });
 }
