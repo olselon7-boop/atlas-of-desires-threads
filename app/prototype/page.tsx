@@ -42,7 +42,7 @@ export default function PrototypePage(){
   const [selected,setSelected]=useState<Desire|null>(null);
   const [hovered,setHovered]=useState<Desire|null>(null);
   const [paused,setPaused]=useState(false);
-  const [speed,setSpeed]=useState(1);
+  const [speed,setSpeed]=useState(.55);
   const canvasRef=useRef<HTMLCanvasElement|null>(null);
 
   useEffect(()=>{
@@ -116,12 +116,19 @@ export default function PrototypePage(){
       const hit:Array<{x:number;y:number;r:number;d:Desire;z:number;scale:number;isSel:boolean}>=[];
       const sorted=[...nodes].sort((a,b)=>a.offset-b.offset);
       for(const n of sorted){
-        let z=(n.offset+t*.055+n.drift)%1;
+        let z=(n.offset+t*.028+n.drift)%1;
         if(z<0)z+=1;
-        const depth=z*z;
+        let visualZ=z;
+        if(z>.78 && z<.92){
+          const p=(z-.78)/.14;
+          visualZ=.78+p*.055;
+        } else if(z>=.92){
+          visualZ=.835+(z-.92)*2.05;
+        }
+        const depth=visualZ*visualZ;
         const scale=.22+depth*1.75;
         const x=cx+n.lane*w*.18*scale+Math.sin(t*.6+n.phase)*12*scale;
-        const y=horizon+(z-.18)*h*.48;
+        const y=horizon+(visualZ-.18)*h*.48;
         const r=n.size*scale;
         const isSel=selected?.id===n.d.id;
         ctx.beginPath();
@@ -129,23 +136,23 @@ export default function PrototypePage(){
         ctx.fillStyle=isSel?"rgba(240,244,226,.96)":n.d.has_media?"rgba(203,216,165,.78)":"rgba(225,226,216,.58)";
         ctx.fill();
 
-        hit.push({x,y,r:Math.max(8,r*2),d:n.d,z,scale,isSel});
+        hit.push({x,y,r:Math.max(8,r*2),d:n.d,z:visualZ,scale,isSel});
       }
 
       const ambientLabels=(hit as any[])
         .filter(x=>!selected || x.d.id!==selected.id)
         .filter(x=>x.z>.76)
         .sort((a,b)=>b.z-a.z)
-        .slice(0,7);
+        .slice(0,5);
 
       const boxes:Array<{x:number;y:number;w:number;h:number}>=[];
 
       for(const lh of ambientLabels){
         const clean=lh.d.text.replace(/https?:\/\/\S+/g,"").replace(/\s+/g," ").trim();
         if(!clean) continue;
-        const maxChars=lh.z>.9?58:42;
+        const maxChars=lh.z>.88?72:56;
         const txt=clean.slice(0,maxChars)+(clean.length>maxChars?"…":"");
-        const fs=lh.z>.9?18:14;
+        const fs=lh.z>.88?19:15;
         ctx.font=`${fs}px Georgia,serif`;
         const m=ctx.measureText(txt);
         const bw=Math.min(m.width,w*.34);
