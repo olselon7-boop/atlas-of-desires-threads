@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { detectDesire } from "@/lib/desire";
 import { enrichDesireText } from "@/lib/desire-enrichment";
 import { buildXSearchUrl, estimateXPostReadCost, X_HIGH_RECALL_QUERIES } from "@/lib/x";
+import { persistXSearchResponse, type XPersistResponse } from "@/lib/x-persistence";
 
 type XPost = {
   id?: string;
@@ -13,8 +14,7 @@ type XPost = {
   geo?: { place_id?: string };
 };
 
-type XResponse = {
-  data?: XPost[];
+type XResponse = XPersistResponse & {
   title?: string;
   detail?: string;
 };
@@ -34,7 +34,7 @@ async function runQuery(token: string, query: string, year: number) {
   });
   const body = await response.json().catch(() => null) as XResponse | null;
   if (!response.ok) throw new Error(body?.detail || body?.title || `X API error ${response.status}`);
-  return body?.data || [];
+  return body || {};
 }
 
 function noiseHint(text: string) {
@@ -53,6 +53,7 @@ export async function GET(request: NextRequest) {
 
   const params = new URL(request.url).searchParams;
   const execute = params.get("execute") === "1";
+  const persist = params.get("persist") === "1";
   const year = Number(params.get("year") || "2026");
   if (!Number.isInteger(year) || year < 2006 || year > new Date().getUTCFullYear()) {
     return NextResponse.json({ error: "Invalid year." }, { status: 400 });
@@ -113,7 +114,8 @@ export async function GET(request: NextRequest) {
   }> = [];
 
   for (const cell of cells) {
-    const posts = await runQuery(token, cell.query, year);
+    const response = await runQuery(token, cell.query, year);
+    const posts = response.data || [];
     const seen = new Set<string>();
     for (const post of posts) {
       if (!post.id || !post.text) continue;
@@ -132,7 +134,16 @@ export async function GET(request: NextRequest) {
         enrichment: enrichDesireText(post.text),
       });
     }
-    perQuery.push({ language: cell.language, query: cell.query, count: posts.length, uniqueCount: seen.size });
+    let persistence = null;
+    if (persist) {
+      persistence = await persistXSearchResponse({
+        response,
+        query: cell.query,
+        year,
+        estimatedCostUsd: estimateXPostReadCost(posts.length),
+      });
+    }
+    perQuery.push({ language: cell.language, query: cell.query, count: posts.length, uniqueCount: seen.size, persistence } as any);
   }
 
   const dedup = new Map<string, typeof rows[number]>();
@@ -165,6 +176,7 @@ export async function GET(request: NextRequest) {
     totalFetched: rows.length,
     uniquePosts: unique.length,
     estimatedReadCostUsd: estimateXPostReadCost(rows.length),
+    persisted: persist,
     duplicateRate: rows.length ? Number(((rows.length - unique.length) / rows.length).toFixed(3)) : 0,
     byLanguage,
     byState,
