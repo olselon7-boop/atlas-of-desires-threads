@@ -62,3 +62,19 @@ export const X_HISTORICAL_FORMULAS = {
     '"my dream came true" lang:en -is:retweet',
   ],
 } as const;
+
+
+export const X_ANCHOR_YEARS = [2010, 2012, 2014, 2016, 2018, 2020, 2022, 2024, 2026] as const;
+
+export const X_LIFECYCLE_QUERIES = {
+  ru: {
+    dreaming: '"я мечтаю" lang:ru -is:retweet',
+    fulfilled_passive: '"мечта сбылась" lang:ru -is:retweet',
+    fulfilled_active: '("исполнил мечту" OR "исполнила мечту" OR "осуществил мечту" OR "осуществила мечту" OR "реализовал мечту" OR "реализовала мечту") lang:ru -is:retweet',
+  },
+  en: {
+    dreaming: '"I dream" lang:en -is:retweet',
+    fulfilled_passive: '"my dream came true" lang:en -is:retweet',
+    fulfilled_active: '("I achieved my dream" OR "I made my dream come true") lang:en -is:retweet',
+  },
+} as const;
