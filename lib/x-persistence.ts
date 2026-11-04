@@ -68,8 +68,8 @@ export async function persistXSearchResponse(input: {
 
       const beforePost = await db.unsafe("select id from raw_posts where platform=$1 and source_post_id=$2 limit 1", ["x", post.id]);
       const postRows = await db.unsafe(
-        "insert into raw_posts (platform, source_post_id, author_id, original_text, language, source_created_at, permalink, conversation_id, post_type, raw_payload, collection_run_id) values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10::jsonb,$11) on conflict (platform, source_post_id) do update set original_text=excluded.original_text, language=excluded.language, raw_payload=excluded.raw_payload returning id",
-        ["x", post.id, authorUuid, post.text, post.lang || null, post.created_at || null, "https://x.com/i/web/status/" + post.id, post.conversation_id || null, post.referenced_tweets?.[0]?.type || "original", JSON.stringify({ post, query: input.query }), runId]
+        "insert into raw_posts (platform, source_post_id, author_id, original_text, language, source_created_at, permalink, conversation_id, parent_source_post_id, post_type, raw_payload, collection_run_id) values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11::jsonb,$12) on conflict (platform, source_post_id) do update set original_text=excluded.original_text, language=excluded.language, conversation_id=excluded.conversation_id, parent_source_post_id=excluded.parent_source_post_id, raw_payload=excluded.raw_payload returning id",
+        ["x", post.id, authorUuid, post.text, post.lang || null, post.created_at || null, "https://x.com/i/web/status/" + post.id, post.conversation_id || null, post.referenced_tweets?.find(x => x.type === "replied_to")?.id || null, post.referenced_tweets?.[0]?.type || "original", JSON.stringify({ post, query: input.query }), runId]
       );
       const postUuid = postRows[0].id as string;
       if (!beforePost.length) insertedPosts++;
