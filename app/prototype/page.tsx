@@ -37,12 +37,98 @@ function hash01(s:string){
   return ((h>>>0)%100000)/100000;
 }
 
+
+function drawDreamStroke(
+  ctx: CanvasRenderingContext2D,
+  d: Desire,
+  x: number,
+  y: number,
+  size: number,
+  alpha: number,
+  selected: boolean
+){
+  const seed=hash01(d.id+"stroke");
+  const kind=d.deep_desire||"unknown";
+  const steps=42;
+  const pts:Array<{x:number;y:number}>=[];
+
+  for(let i=0;i<=steps;i++){
+    const u=i/steps;
+    const s=u*2-1;
+    let px=s;
+    let py=0;
+
+    if(kind==="travel_exploration"){
+      py=-.34*Math.sin(u*Math.PI)+.13*Math.sin(u*Math.PI*4+seed*5);
+      px=s+.18*Math.sin(u*Math.PI*2);
+    } else if(kind==="home_belonging"){
+      const a=u*Math.PI*2;
+      px=.72*Math.cos(a)*(1-u*.18)+s*.28;
+      py=.52*Math.sin(a)-.22*s;
+    } else if(kind==="love_relationships"){
+      const a=u*Math.PI*2;
+      px=.68*Math.sin(a);
+      py=-.55*Math.cos(a)+.2*Math.cos(a*2)-.15;
+    } else if(kind==="career_self_realization" || kind==="recognition_status"){
+      px=s*.72+.13*Math.sin(u*Math.PI*5+seed*3);
+      py=.68-s*.72+.1*Math.sin(u*Math.PI*3);
+    } else if(kind==="freedom_independence"){
+      px=s+.22*Math.sin(u*Math.PI*2);
+      py=.45*Math.sin(u*Math.PI)-.35*s;
+    } else if(kind==="creativity_expression"){
+      const a=u*Math.PI*4.2;
+      const r=.08+.72*u;
+      px=r*Math.cos(a)+s*.28;
+      py=r*Math.sin(a)*.68;
+    } else if(kind==="family_children"){
+      const a=u*Math.PI*2;
+      px=.58*Math.cos(a)+s*.38;
+      py=.42*Math.sin(a)+.12*Math.sin(a*3);
+    } else if(kind==="education_growth"){
+      px=s*.78;
+      py=.52-s*.48+.13*Math.sin(u*Math.PI*6+seed*4);
+    } else if(kind==="health_wellbeing"){
+      px=s;
+      py=.16*Math.sin(u*Math.PI*6)+.08*Math.sin(u*Math.PI*13+seed*6);
+    } else if(kind==="money_material_security"){
+      px=s*.86+.08*Math.sin(u*Math.PI*7);
+      py=.36*Math.sin(u*Math.PI*2)+.12*Math.cos(u*Math.PI*5);
+    } else {
+      px=s;
+      py=.28*Math.sin(u*Math.PI*3+seed*5)+.12*Math.sin(u*Math.PI*8);
+    }
+
+    const textWarp=(hash01(d.text.slice(0,Math.max(1,Math.floor((u+.08)*d.text.length))))-.5)*.18;
+    py+=textWarp*(.35+.65*Math.sin(u*Math.PI));
+    pts.push({x:x+px*size,y:y+py*size});
+  }
+
+  ctx.beginPath();
+  ctx.moveTo(pts[0].x,pts[0].y);
+  for(let i=1;i<pts.length-1;i++){
+    const mx=(pts[i].x+pts[i+1].x)/2;
+    const my=(pts[i].y+pts[i+1].y)/2;
+    ctx.quadraticCurveTo(pts[i].x,pts[i].y,mx,my);
+  }
+  const last=pts[pts.length-1];
+  ctx.lineTo(last.x,last.y);
+  ctx.strokeStyle=selected
+    ? "rgba(239,242,226,.98)"
+    : `rgba(203,216,165,${alpha.toFixed(3)})`;
+  ctx.lineWidth=selected?1.9:1.05;
+  ctx.lineCap="round";
+  ctx.lineJoin="round";
+  ctx.stroke();
+
+  return { radius:size*.95 };
+}
+
 export default function PrototypePage(){
   const [desires,setDesires]=useState<Desire[]>([]);
   const [selected,setSelected]=useState<Desire|null>(null);
   const [hovered,setHovered]=useState<Desire|null>(null);
   const [paused,setPaused]=useState(false);
-  const [speed,setSpeed]=useState(1);
+  const [speed,setSpeed]=useState(.7);
   const canvasRef=useRef<HTMLCanvasElement|null>(null);
 
   useEffect(()=>{
@@ -94,7 +180,7 @@ export default function PrototypePage(){
       ctx.strokeStyle="rgba(220,228,210,.12)";
       ctx.lineWidth=1;
       for(let k=0;k<9;k++){
-        const z=((k/9)+t*.035)%1;
+        const z=((k/9)+t*.012)%1;
         const scale=.12+z*z*1.4;
         const rw=w*.08*scale;
         const rh=h*.18*scale;
@@ -108,7 +194,7 @@ export default function PrototypePage(){
       ctx.moveTo(cx,h*.12);
       for(let y=0;y<=h;y+=8){
         const p=y/h;
-        const x=cx+Math.sin(p*8+t*.55)*w*.035*(.2+p);
+        const x=cx+Math.sin(p*8+t*.18)*w*.035*(.2+p);
         ctx.lineTo(x,y);
       }
       ctx.stroke();
@@ -116,7 +202,7 @@ export default function PrototypePage(){
       const hit:Array<{x:number;y:number;r:number;d:Desire;z:number;scale:number;isSel:boolean}>=[];
       const sorted=[...nodes].sort((a,b)=>a.offset-b.offset);
       for(const n of sorted){
-        let z=(n.offset+t*.044+n.drift)%1;
+        let z=(n.offset+t*.015+n.drift)%1;
         if(z<0)z+=1;
         let visualZ=z;
         if(z>.805 && z<.875){
@@ -129,14 +215,12 @@ export default function PrototypePage(){
         const scale=.22+depth*1.75;
         const x=cx+n.lane*w*.18*scale+Math.sin(t*.6+n.phase)*12*scale;
         const y=horizon+(visualZ-.18)*h*.48;
-        const r=n.size*scale;
         const isSel=selected?.id===n.d.id;
-        ctx.beginPath();
-        ctx.arc(x,y,isSel?r*2.4:r,0,Math.PI*2);
-        ctx.fillStyle=isSel?"rgba(240,244,226,.96)":n.d.has_media?"rgba(203,216,165,.78)":"rgba(225,226,216,.58)";
-        ctx.fill();
+        const strokeSize=(12+visualZ*34)*(isSel?1.38:1);
+        const alpha=.12+visualZ*.56+(n.d.has_media?.08:0);
+        const shape=drawDreamStroke(ctx,n.d,x,y,strokeSize,Math.min(.82,alpha),isSel);
 
-        hit.push({x,y,r:Math.max(8,r*2),d:n.d,z:visualZ,scale,isSel});
+        hit.push({x,y,r:Math.max(12,shape.radius),d:n.d,z:visualZ,scale,isSel});
       }
 
       const focusCandidates=(hit as any[])
@@ -165,10 +249,6 @@ export default function PrototypePage(){
         ctx.textBaseline="middle";
         ctx.fillText(txt,bx,by-fs*.2);
 
-        ctx.beginPath();
-        ctx.arc(primary.x,primary.y,Math.max(3,primary.r*.8),0,Math.PI*2);
-        ctx.fillStyle="rgba(203,216,165,.98)";
-        ctx.fill();
         ctx.textBaseline="alphabetic";
       }
 
@@ -268,8 +348,8 @@ export default function PrototypePage(){
 
     <footer className="protoControls">
       <div className="protoLegend">
-        <span><i className="dot textDot"></i>TEXT</span>
-        <span><i className="dot mediaDot"></i>IMAGE ATTACHED</span>
+        <span>ONE LINE = ONE DESIRE</span>
+        <span>BRIGHTER = IMAGE ATTACHED</span>
         <span>SPACE = SEMANTIC PROXIMITY / PROTOTYPE</span>
       </div>
       <div className="protoButtons">
