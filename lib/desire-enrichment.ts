@@ -32,7 +32,7 @@ export type DeepDesire =
   | "unknown";
 
 const deepDesirePatterns: Array<[RegExp, DeepDesire]> = [
-  [/(любов|отношен|партнер|партнёр|муж|жен|парень|девуш|marry|marriage|love|relationship|partner|boyfriend|girlfriend|husband|wife)/iu, "love_relationships"],
+  [/(любов|отношен|партнер|партнёр|парень|девуш|свадьб|marry|marriage|love|relationship|partner|boyfriend|girlfriend|husband|wife)/iu, "love_relationships"],
   [/(дом|квартир|жиль|сво[йя]s+(?:дом|квартир)|home|house|apartment|housing|own place)/iu, "home_belonging"],
   [/(поех|путешеств|переех|эмигр|релокац|море|стран|travel|trip|visit|move to|moving|emigrat|relocat|world tour)/iu, "travel_exploration"],
   [/(работ|карьер|профес|бизнес|стартап|предприним|статьs+w+|job|career|business|startup|profession|become|photographer|singer|actor|actress)/iu, "career_self_realization"],
