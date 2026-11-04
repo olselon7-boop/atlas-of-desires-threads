@@ -37,6 +37,62 @@ function hash01(s:string){
   return ((h>>>0)%100000)/100000;
 }
 
+const CLUSTER_ORDER = [
+  "love_relationships","home_belonging","travel_exploration","career_self_realization",
+  "freedom_independence","creativity_expression","family_children","money_material_security",
+  "education_growth","health_wellbeing","recognition_status","community_justice",
+  "experience_pleasure","other","unknown"
+] as const;
+
+function clusterAnchor(kind:string, w:number, h:number){
+  const idx=Math.max(0,CLUSTER_ORDER.indexOf(kind as any));
+  const cols=5;
+  const col=idx%cols;
+  const row=Math.floor(idx/cols);
+  const x=w*(.16 + col*.17);
+  const y=h*(.28 + row*.22);
+  return {x,y};
+}
+
+function isFulfilled(d:Desire){
+  return d.dream_state==="fulfilled_passive" || d.dream_state==="fulfilled_active";
+}
+
+function drawFulfillmentSpark(
+  ctx:CanvasRenderingContext2D,
+  d:Desire,
+  x:number,
+  y:number,
+  radius:number,
+  t:number
+){
+  if(!isFulfilled(d)) return;
+  const active=d.dream_state==="fulfilled_active";
+  const count=active?16:10;
+  const pulse=.5+.5*Math.sin(t*(active?3.2:2.2)+hash01(d.id+"spark")*Math.PI*2);
+  ctx.save();
+  ctx.globalCompositeOperation="lighter";
+  for(let i=0;i<count;i++){
+    const a=(i/count)*Math.PI*2 + hash01(d.id+"a"+i)*.7;
+    const phase=(t*(active?.85:.55)+hash01(d.id+"p"+i))%1;
+    const r=radius*(.35+phase*(active?1.45:1.05));
+    const sx=x+Math.cos(a)*r;
+    const sy=y+Math.sin(a)*r*.78;
+    const alpha=(1-phase)*(.18+.62*pulse);
+    ctx.beginPath();
+    ctx.arc(sx,sy,active?1.6:1.2,0,Math.PI*2);
+    ctx.fillStyle=`rgba(245,220,150,${alpha.toFixed(3)})`;
+    ctx.fill();
+    ctx.beginPath();
+    ctx.moveTo(x+Math.cos(a)*radius*.35,y+Math.sin(a)*radius*.35*.78);
+    ctx.lineTo(sx,sy);
+    ctx.strokeStyle=`rgba(245,220,150,${(alpha*.38).toFixed(3)})`;
+    ctx.lineWidth=.7;
+    ctx.stroke();
+  }
+  ctx.restore();
+}
+
 
 
 type Gesture =
@@ -220,11 +276,12 @@ export default function PrototypePage(){
     let t=0;
     const nodes=desires.map((d,i)=>({
       d,
-      lane:(hash01(d.id+"lane")-.5)*1.7,
       offset:hash01(d.id+"off")*1.15,
       phase:hash01(d.id+"phase")*Math.PI*2,
       size:1.2+hash01(d.id+"size")*2.7,
-      drift:(hash01(d.id+"drift")-.5)*.18
+      drift:(hash01(d.id+"drift")-.5)*.18,
+      clusterDx:(hash01(d.id+"cluster-x")-.5),
+      clusterDy:(hash01(d.id+"cluster-y")-.5)
     }));
 
     const resize=()=>{
@@ -268,6 +325,19 @@ export default function PrototypePage(){
       }
       ctx.stroke();
 
+      const clusterKinds=Array.from(new Set(desires.map(d=>d.deep_desire||"unknown")));
+      for(const kind of clusterKinds){
+        const a=clusterAnchor(kind,w,h);
+        ctx.beginPath();
+        ctx.arc(a.x,a.y,26,0,Math.PI*2);
+        ctx.strokeStyle="rgba(203,216,165,.08)";
+        ctx.lineWidth=1;
+        ctx.stroke();
+        ctx.font="9px Arial,sans-serif";
+        ctx.fillStyle="rgba(203,216,165,.34)";
+        ctx.fillText(LABELS[kind]||kind.toUpperCase(),a.x+32,a.y+3);
+      }
+
       const hit:Array<{x:number;y:number;r:number;d:Desire;z:number;scale:number;isSel:boolean}>=[];
       const sorted=[...nodes].sort((a,b)=>a.offset-b.offset);
       for(const n of sorted){
@@ -282,12 +352,16 @@ export default function PrototypePage(){
         }
         const depth=visualZ*visualZ;
         const scale=.22+depth*1.75;
-        const x=cx+n.lane*w*.18*scale+Math.sin(t*.6+n.phase)*12*scale;
-        const y=horizon+(visualZ-.18)*h*.48;
+        const anchor=clusterAnchor(n.d.deep_desire||"unknown",w,h);
+        const spreadX=90+visualZ*115;
+        const spreadY=55+visualZ*72;
+        const x=anchor.x+n.clusterDx*spreadX+Math.sin(t*.22+n.phase)*8*scale;
+        const y=anchor.y+n.clusterDy*spreadY+(visualZ-.5)*42;
         const isSel=selected?.id===n.d.id;
         const strokeSize=(16+visualZ*46)*(isSel?1.32:1);
         const alpha=.12+visualZ*.56+(n.d.has_media?.08:0);
         const shape=drawDreamStroke(ctx,n.d,x,y,strokeSize,Math.min(.82,alpha),isSel);
+        drawFulfillmentSpark(ctx,n.d,x,y,shape.radius*.72,t);
 
         hit.push({x,y,r:Math.max(12,shape.radius),d:n.d,z:visualZ,scale,isSel});
       }
@@ -419,7 +493,7 @@ export default function PrototypePage(){
       <div className="protoLegend">
         <span>ONE LINE = ONE DESIRE</span>
         <span>BRIGHTER = IMAGE ATTACHED</span>
-        <span>SPACE = SEMANTIC PROXIMITY / PROTOTYPE</span>
+        <span>SPACE = DESIRE CLUSTERS</span><span>SPARKS = DREAM FULFILLED</span>
       </div>
       <div className="protoButtons">
         <button onClick={()=>setPaused(v=>!v)}>{paused?"PLAY":"PAUSE"}</button>
