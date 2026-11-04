@@ -48,8 +48,16 @@ export async function GET(request: NextRequest) {
 
   const params = new URL(request.url).searchParams;
   const execute = params.get("execute") === "1";
+  const periodFilter = params.get("period");
+  const selectedPeriods = periodFilter
+    ? X_HISTORICAL_PERIODS.filter(period => period.id === periodFilter)
+    : X_HISTORICAL_PERIODS;
 
-  const cells = X_HISTORICAL_PERIODS.flatMap(period =>
+  if (periodFilter && selectedPeriods.length === 0) {
+    return NextResponse.json({ error: "Unknown period.", allowedPeriods: X_HISTORICAL_PERIODS.map(p => p.id) }, { status: 400 });
+  }
+
+  const cells = selectedPeriods.flatMap(period =>
     (["ru", "en"] as const).flatMap(language =>
       X_HISTORICAL_FORMULAS[language].map(query => ({
         period: period.id,
@@ -68,7 +76,7 @@ export async function GET(request: NextRequest) {
       cells: cells.length,
       maxPosts,
       estimatedMaxReadCostUsd: estimateXPostReadCost(maxPosts),
-      periods: X_HISTORICAL_PERIODS,
+      periods: selectedPeriods,
       formulas: X_HISTORICAL_FORMULAS,
       note: "Add ?execute=1 to run the pilot. Each stratum is capped at 10 posts.",
     }, { headers: { "Cache-Control": "no-store", "X-Robots-Tag": "noindex" } });
