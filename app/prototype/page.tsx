@@ -45,13 +45,25 @@ const CLUSTER_ORDER = [
 ] as const;
 
 function clusterAnchor(kind:string, w:number, h:number){
-  const idx=Math.max(0,CLUSTER_ORDER.indexOf(kind as any));
-  const cols=5;
-  const col=idx%cols;
-  const row=Math.floor(idx/cols);
-  const x=w*(.16 + col*.17);
-  const y=h*(.28 + row*.22);
-  return {x,y};
+  const map:Record<string,[number,number]>={
+    love_relationships:[.50,.28],
+    home_belonging:[.24,.34],
+    travel_exploration:[.76,.30],
+    career_self_realization:[.70,.58],
+    freedom_independence:[.84,.48],
+    creativity_expression:[.42,.63],
+    family_children:[.28,.61],
+    money_material_security:[.58,.72],
+    education_growth:[.16,.73],
+    health_wellbeing:[.84,.72],
+    recognition_status:[.62,.42],
+    community_justice:[.12,.48],
+    experience_pleasure:[.40,.42],
+    other:[.18,.22],
+    unknown:[.88,.22]
+  };
+  const p=map[kind]||[.5,.5];
+  return {x:w*p[0],y:h*p[1]};
 }
 
 function isFulfilled(d:Desire){
@@ -328,14 +340,39 @@ export default function PrototypePage(){
       const clusterKinds=Array.from(new Set(desires.map(d=>d.deep_desire||"unknown")));
       for(const kind of clusterKinds){
         const a=clusterAnchor(kind,w,h);
+        const members=desires.filter(d=>(d.deep_desire||"unknown")===kind);
+        const density=Math.min(1,members.length/24);
+        const rx=72+density*48;
+        const ry=46+density*32;
+
+        const grad=ctx.createRadialGradient(a.x,a.y,6,a.x,a.y,rx);
+        grad.addColorStop(0,"rgba(203,216,165,.055)");
+        grad.addColorStop(.65,"rgba(203,216,165,.018)");
+        grad.addColorStop(1,"rgba(203,216,165,0)");
+        ctx.fillStyle=grad;
         ctx.beginPath();
-        ctx.arc(a.x,a.y,26,0,Math.PI*2);
-        ctx.strokeStyle="rgba(203,216,165,.08)";
+        ctx.ellipse(a.x,a.y,rx,ry,0,0,Math.PI*2);
+        ctx.fill();
+
+        ctx.beginPath();
+        ctx.ellipse(a.x,a.y,rx,ry,0,0,Math.PI*2);
+        ctx.setLineDash([2,6]);
+        ctx.strokeStyle="rgba(203,216,165,.12)";
         ctx.lineWidth=1;
         ctx.stroke();
-        ctx.font="9px Arial,sans-serif";
-        ctx.fillStyle="rgba(203,216,165,.34)";
-        ctx.fillText(LABELS[kind]||kind.toUpperCase(),a.x+32,a.y+3);
+        ctx.setLineDash([]);
+
+        ctx.beginPath();
+        ctx.arc(a.x,a.y,3.4,0,Math.PI*2);
+        ctx.fillStyle="rgba(203,216,165,.62)";
+        ctx.fill();
+
+        ctx.font="10px Arial,sans-serif";
+        ctx.fillStyle="rgba(203,216,165,.62)";
+        ctx.fillText(LABELS[kind]||kind.toUpperCase(),a.x-rx,a.y-ry-10);
+        ctx.font="8px Arial,sans-serif";
+        ctx.fillStyle="rgba(203,216,165,.28)";
+        ctx.fillText(String(members.length)+" DREAMS",a.x-rx,a.y-ry+3);
       }
 
       const hit:Array<{x:number;y:number;r:number;d:Desire;z:number;scale:number;isSel:boolean}>=[];
@@ -353,10 +390,17 @@ export default function PrototypePage(){
         const depth=visualZ*visualZ;
         const scale=.22+depth*1.75;
         const anchor=clusterAnchor(n.d.deep_desire||"unknown",w,h);
-        const spreadX=90+visualZ*115;
-        const spreadY=55+visualZ*72;
-        const x=anchor.x+n.clusterDx*spreadX+Math.sin(t*.22+n.phase)*8*scale;
-        const y=anchor.y+n.clusterDy*spreadY+(visualZ-.5)*42;
+        const spreadX=58+visualZ*82;
+        const spreadY=38+visualZ*54;
+        const x=anchor.x+n.clusterDx*spreadX+Math.sin(t*.22+n.phase)*6*scale;
+        const y=anchor.y+n.clusterDy*spreadY+(visualZ-.5)*28;
+
+        ctx.beginPath();
+        ctx.moveTo(anchor.x,anchor.y);
+        ctx.lineTo(x,y);
+        ctx.strokeStyle="rgba(203,216,165,.035)";
+        ctx.lineWidth=.7;
+        ctx.stroke();
         const isSel=selected?.id===n.d.id;
         const strokeSize=(16+visualZ*46)*(isSel?1.32:1);
         const alpha=.12+visualZ*.56+(n.d.has_media?.08:0);
