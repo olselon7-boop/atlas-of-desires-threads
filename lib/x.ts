@@ -43,3 +43,22 @@ export function buildXSearchUrl(input: {
 export function estimateXPostReadCost(posts: number) {
   return Number((Math.max(0, posts) * 0.005).toFixed(4));
 }
+
+
+export const X_HISTORICAL_PERIODS = [
+  { id: "2006-2010", start: "2006-03-21T00:00:00Z", end: "2010-12-31T23:59:59Z" },
+  { id: "2011-2015", start: "2011-01-01T00:00:00Z", end: "2015-12-31T23:59:59Z" },
+  { id: "2016-2020", start: "2016-01-01T00:00:00Z", end: "2020-12-31T23:59:59Z" },
+  { id: "2021-2026", start: "2021-01-01T00:00:00Z", end: "2026-11-04T23:59:59Z" },
+] as const;
+
+export const X_HISTORICAL_FORMULAS = {
+  ru: [
+    '"я мечтаю" lang:ru -is:retweet',
+    '"мечта сбылась" lang:ru -is:retweet',
+  ],
+  en: [
+    '"I dream" lang:en -is:retweet',
+    '"my dream came true" lang:en -is:retweet',
+  ],
+} as const;
