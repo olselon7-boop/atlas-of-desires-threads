@@ -40,6 +40,7 @@ function hash01(s:string){
 export default function PrototypePage(){
   const [desires,setDesires]=useState<Desire[]>([]);
   const [selected,setSelected]=useState<Desire|null>(null);
+  const [hovered,setHovered]=useState<Desire|null>(null);
   const [paused,setPaused]=useState(false);
   const [speed,setSpeed]=useState(1);
   const canvasRef=useRef<HTMLCanvasElement|null>(null);
@@ -131,47 +132,31 @@ export default function PrototypePage(){
         hit.push({x,y,r:Math.max(8,r*2),d:n.d,z,scale,isSel});
       }
 
-      const labelBoxes:Array<{x:number;y:number;w:number;h:number}>=[];
-      const labelCandidates=(hit as any[])
-        .filter(h=>h.isSel || h.z>.82)
-        .sort((a,b)=>Number(b.isSel)-Number(a.isSel) || b.z-a.z)
-        .slice(0,12);
-
-      for(const h of labelCandidates){
-        const clean=h.d.text.replace(/https?:\/\/\S+/g,"").replace(/\s+/g," ").trim();
-        const maxChars=h.isSel?110:52;
-        const text=clean.slice(0,maxChars)+(clean.length>maxChars?"…":"");
-        const fontSize=h.isSel?18:Math.max(11,12*h.scale);
-        ctx.font=`${fontSize}px Georgia,serif`;
-        const metrics=ctx.measureText(text);
-        const padX=10,padY=7;
-        const bw=Math.min(metrics.width+padX*2,w*.42);
-        const bh=fontSize+padY*2;
-        let bx=h.x+h.r*2.6;
-        let by=h.y-bh/2;
-
-        if(bx+bw>w-18) bx=h.x-h.r*2.6-bw;
-        by=Math.max(18,Math.min(h-bh-18,by));
-
-        let guard=0;
-        while(labelBoxes.some(b=>!(bx+bw<b.x || bx>b.x+b.w || by+bh<b.y || by>b.y+b.h)) && guard<12){
-          by+=bh+6;
-          if(by+bh>h-18){by=18+guard*5;bx=Math.max(18,bx-bw*.18)}
-          guard++;
+      if(selected){
+        const sh=(hit as any[]).find(x=>x.d.id===selected.id);
+        if(sh){
+          const clean=selected.text.replace(/https?:\/\/\S+/g,"").replace(/\s+/g," ").trim();
+          const maxChars=88;
+          const text=clean.slice(0,maxChars)+(clean.length>maxChars?"…":"");
+          const fontSize=16;
+          ctx.font=`${fontSize}px Georgia,serif`;
+          const metrics=ctx.measureText(text);
+          const padX=11,padY=8;
+          const bw=Math.min(metrics.width+padX*2,w*.38);
+          const bh=fontSize+padY*2;
+          let bx=sh.x+sh.r*2.8;
+          let by=sh.y-bh/2;
+          if(bx+bw>w-20) bx=sh.x-sh.r*2.8-bw;
+          by=Math.max(20,Math.min(canvas.clientHeight-bh-20,by));
+          ctx.fillStyle="rgba(5,7,6,.94)";
+          ctx.fillRect(bx,by,bw,bh);
+          ctx.strokeStyle="rgba(203,216,165,.55)";
+          ctx.strokeRect(bx+.5,by+.5,bw-1,bh-1);
+          ctx.fillStyle="rgba(246,246,238,.97)";
+          ctx.textBaseline="middle";
+          ctx.fillText(text,bx+padX,by+bh/2);
+          ctx.textBaseline="alphabetic";
         }
-
-        const overlaps=labelBoxes.some(b=>!(bx+bw<b.x || bx>b.x+b.w || by+bh<b.y || by>b.y+b.h));
-        if(overlaps && !h.isSel) continue;
-
-        ctx.fillStyle=h.isSel?"rgba(5,7,6,.94)":"rgba(5,7,6,.78)";
-        ctx.fillRect(bx,by,bw,bh);
-        ctx.strokeStyle=h.isSel?"rgba(203,216,165,.55)":"rgba(231,228,218,.12)";
-        ctx.strokeRect(bx+.5,by+.5,bw-1,bh-1);
-        ctx.fillStyle=h.isSel?"rgba(246,246,238,.97)":"rgba(231,228,218,.82)";
-        ctx.textBaseline="middle";
-        ctx.fillText(text,bx+padX,by+bh/2);
-        ctx.textBaseline="alphabetic";
-        labelBoxes.push({x:bx,y:by,w:bw,h:bh});
       }
 
       (canvas as any).__hits=hit;
@@ -179,19 +164,24 @@ export default function PrototypePage(){
     };
     raf=requestAnimationFrame(draw);
 
-    const onClick=(e:MouseEvent)=>{
+    const pick=(e:MouseEvent)=>{
       const rect=canvas.getBoundingClientRect();
       const x=e.clientX-rect.left,y=e.clientY-rect.top;
       const hits=(canvas as any).__hits||[];
       let best:any=null,bestD=Infinity;
       for(const h of hits){
         const d=Math.hypot(x-h.x,y-h.y);
-        if(d<h.r*2.1&&d<bestD){best=h;bestD=d}
+        if(d<h.r*2.4&&d<bestD){best=h;bestD=d}
       }
-      if(best)setSelected(best.d);
+      return best;
     };
+    const onClick=(e:MouseEvent)=>{const best=pick(e);if(best)setSelected(best.d)};
+    const onMove=(e:MouseEvent)=>{const best=pick(e);setHovered(best?.d||null);canvas.style.cursor=best?"pointer":"crosshair"};
+    const onLeave=()=>setHovered(null);
     canvas.addEventListener("click",onClick);
-    return ()=>{cancelAnimationFrame(raf);window.removeEventListener("resize",resize);canvas.removeEventListener("click",onClick)};
+    canvas.addEventListener("mousemove",onMove);
+    canvas.addEventListener("mouseleave",onLeave);
+    return ()=>{cancelAnimationFrame(raf);window.removeEventListener("resize",resize);canvas.removeEventListener("click",onClick);canvas.removeEventListener("mousemove",onMove);canvas.removeEventListener("mouseleave",onLeave)};
   },[desires,paused,speed,selected]);
 
   return <main className="atlasProto">
@@ -205,7 +195,12 @@ export default function PrototypePage(){
       <div className="protoYears">
         <span>2010</span><span>2012</span><span>2014</span><span>2016</span><span>2018</span><span>2020</span><span>2022</span><span>2024</span><span>2026</span>
       </div>
-      <div className="protoHint">CLICK A DESIRE · FOLLOW ITS PATH</div>
+      <div className="protoHint">HOVER TO READ · CLICK TO FOLLOW</div>
+
+      {hovered && !selected && <div className="hoverDream">
+        <span>{LABELS[hovered.deep_desire||"unknown"]||hovered.deep_desire||"UNKNOWN"}</span>
+        <p>{hovered.text}</p>
+      </div>}
 
       {selected && <aside className="dreamCard">
         <button onClick={()=>setSelected(null)} aria-label="close">×</button>
