@@ -132,6 +132,45 @@ export default function PrototypePage(){
         hit.push({x,y,r:Math.max(8,r*2),d:n.d,z,scale,isSel});
       }
 
+      const ambientLabels=(hit as any[])
+        .filter(x=>!selected || x.d.id!==selected.id)
+        .filter(x=>x.z>.76)
+        .sort((a,b)=>b.z-a.z)
+        .slice(0,7);
+
+      const boxes:Array<{x:number;y:number;w:number;h:number}>=[];
+
+      for(const lh of ambientLabels){
+        const clean=lh.d.text.replace(/https?:\/\/\S+/g,"").replace(/\s+/g," ").trim();
+        if(!clean) continue;
+        const maxChars=lh.z>.9?58:42;
+        const txt=clean.slice(0,maxChars)+(clean.length>maxChars?"…":"");
+        const fs=lh.z>.9?18:14;
+        ctx.font=`${fs}px Georgia,serif`;
+        const m=ctx.measureText(txt);
+        const bw=Math.min(m.width,w*.34);
+        const bh=fs+6;
+        let bx=lh.x+lh.r*2.3;
+        let by=lh.y-bh/2;
+        if(bx+bw>w-18) bx=lh.x-lh.r*2.3-bw;
+        by=Math.max(18,Math.min(h-bh-18,by));
+
+        let attempts=0;
+        while(boxes.some(b=>!(bx+bw<b.x || bx>b.x+b.w || by+bh<b.y || by>b.y+b.h)) && attempts<10){
+          by+=bh+8;
+          if(by+bh>h-18) by=Math.max(18,lh.y-(attempts+1)*(bh+8));
+          attempts++;
+        }
+        if(boxes.some(b=>!(bx+bw<b.x || bx>b.x+b.w || by+bh<b.y || by>b.y+b.h))) continue;
+
+        const alpha=.28+lh.z*.52;
+        ctx.fillStyle=`rgba(231,228,218,${alpha.toFixed(2)})`;
+        ctx.textBaseline="middle";
+        ctx.fillText(txt,bx,by+bh/2);
+        ctx.textBaseline="alphabetic";
+        boxes.push({x:bx,y:by,w:bw,h:bh});
+      }
+
       if(selected){
         const sh=(hit as any[]).find(x=>x.d.id===selected.id);
         if(sh){
