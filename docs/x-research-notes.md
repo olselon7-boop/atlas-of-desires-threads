@@ -129,3 +129,51 @@ After `X_BEARER_TOKEN` is configured:
 4. one very small full-archive RU test;
 5. inspect returned fields/media/profile/place/replies support;
 6. only then design a persistent X collector and historical sampling strategy.
+
+
+## Anchor-year historical corpus — 2026-11-04
+
+Sampling plan:
+- anchor years: 2010, 2012, 2014, 2016, 2018, 2020, 2022, 2024, 2026
+- languages: RU / EN
+- lifecycle strata: dreaming / fulfilled_passive / fulfilled_active
+- maximum 10 posts per cell
+- 54 cells total
+
+Observed results:
+
+| Year | Unique posts | Estimated read cost |
+| --- | ---: | ---: |
+| 2010 | 48 | $0.240 |
+| 2012 | 54 | $0.270 |
+| 2014 | 37 | $0.185 |
+| 2016 | 49 | $0.245 |
+| 2018 | 54 | $0.270 |
+| 2020 | 53 | $0.265 |
+| 2022 | 57 | $0.285 |
+| 2024 | 55 | $0.275 |
+| 2026 | 57 | $0.285 |
+| **Total** | **464** | **$2.320** |
+
+Important methodological limitation:
+X full-archive search is sorted latest inside the requested year. Therefore each anchor-year sample is biased toward the end of that calendar year, often late December. This corpus is appropriate for exploratory cross-sectional comparison, not population-level prevalence estimates.
+
+Observed data-quality issues:
+- `I dream` includes sleep dreams, lyrics, quotes, jokes, and metaphors.
+- `мечта сбылась` / `my dream came true` can occur in wishes about the future rather than actual fulfillment.
+- third-person and quoted/retweeted statements can survive query filters because legacy retweet text is not always represented consistently by the current API filter.
+- 2014 RU `"я мечтаю"` returned zero results in this pilot while other Russian strata did return results; treat this as a retrieval anomaly until independently re-tested.
+- lifecycle query match is not proof of a valid human aspiration.
+
+Next required enrichment before historical interpretation:
+1. aspiration-vs-noise classifier:
+   - human aspiration
+   - sleep dream
+   - quote/lyrics
+   - joke/meme
+   - third-person
+   - ambiguous/other
+2. canonical `deep_desire` extraction, separate from `surface_expression`.
+3. visual/media analysis for posts with images/video.
+4. manual review sample per year/language/state.
+5. only after filtering, compare themes across anchor years.
