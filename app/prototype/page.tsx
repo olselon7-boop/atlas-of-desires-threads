@@ -113,7 +113,7 @@ export default function PrototypePage(){
       }
       ctx.stroke();
 
-      const hit:Array<{x:number;y:number;r:number;d:Desire}>=[];
+      const hit:Array<{x:number;y:number;r:number;d:Desire;z:number;scale:number;isSel:boolean}>=[];
       const sorted=[...nodes].sort((a,b)=>a.offset-b.offset);
       for(const n of sorted){
         let z=(n.offset+t*.055+n.drift)%1;
