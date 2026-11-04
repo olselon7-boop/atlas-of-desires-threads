@@ -78,3 +78,44 @@ export const X_LIFECYCLE_QUERIES = {
     fulfilled_active: '("I achieved my dream" OR "I made my dream come true") lang:en -is:retweet',
   },
 } as const;
+
+
+export const X_HIGH_RECALL_QUERIES = {
+  ru: [
+    '"я мечтаю" lang:ru -is:retweet',
+    '"всегда мечтал" lang:ru -is:retweet',
+    '"всегда мечтала" lang:ru -is:retweet',
+    '"давно мечтаю" lang:ru -is:retweet',
+    '"мечта детства" lang:ru -is:retweet',
+    '"мечта всей жизни" lang:ru -is:retweet',
+    '"мечтаю стать" lang:ru -is:retweet',
+    '"мечтаю жить" lang:ru -is:retweet',
+    '"мечтаю поехать" lang:ru -is:retweet',
+    '"мечтаю переехать" lang:ru -is:retweet',
+    '"мечта сбылась" lang:ru -is:retweet',
+    '"мечта исполнилась" lang:ru -is:retweet',
+    '"мечта стала реальностью" lang:ru -is:retweet',
+    '"исполнил мечту" lang:ru -is:retweet',
+    '"исполнила мечту" lang:ru -is:retweet',
+    '"осуществил мечту" lang:ru -is:retweet',
+    '"осуществила мечту" lang:ru -is:retweet',
+    '"реализовал мечту" lang:ru -is:retweet',
+    '"реализовала мечту" lang:ru -is:retweet'
+  ],
+  en: [
+    '"I dream of" lang:en -is:retweet',
+    '"I dream about" lang:en -is:retweet',
+    '"always dreamed of" lang:en -is:retweet',
+    '"lifelong dream" lang:en -is:retweet',
+    '"dream since I was a child" lang:en -is:retweet',
+    '"dream of becoming" lang:en -is:retweet',
+    '"dream of living" lang:en -is:retweet',
+    '"dream of moving" lang:en -is:retweet',
+    '"dream of traveling" lang:en -is:retweet',
+    '"my dream came true" lang:en -is:retweet',
+    '"dream became reality" lang:en -is:retweet',
+    '"I achieved my dream" lang:en -is:retweet',
+    '"I made my dream come true" lang:en -is:retweet',
+    '"finally achieved my dream" lang:en -is:retweet'
+  ]
+} as const;
