@@ -116,7 +116,7 @@ export default function PrototypePage(){
       const hit:Array<{x:number;y:number;r:number;d:Desire;z:number;scale:number;isSel:boolean}>=[];
       const sorted=[...nodes].sort((a,b)=>a.offset-b.offset);
       for(const n of sorted){
-        let z=(n.offset+t*.052+n.drift)%1;
+        let z=(n.offset+t*.044+n.drift)%1;
         if(z<0)z+=1;
         let visualZ=z;
         if(z>.805 && z<.875){
