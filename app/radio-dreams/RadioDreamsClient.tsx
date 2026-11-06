@@ -86,6 +86,8 @@ export default function RadioDreamsClient({initialFeed}:{initialFeed:Feed}){
   const [dayLabel,setDayLabel]=useState<string|null>(initialFeed.date||null);
   const [corpus,setCorpus]=useState<Dream[]>(initialCorpus);
   const [played,setPlayed]=useState(initialCorpus.length?1:0);
+  const [activeCluster,setActiveCluster]=useState<Cluster|null>(initialCorpus[0]?.cluster||null);
+  const [dropTick,setDropTick]=useState(0);
 
   const audioCtx=useRef<AudioContext|null>(null);
   const playbackTimer=useRef<number|null>(null);
@@ -138,6 +140,8 @@ export default function RadioDreamsClient({initialFeed}:{initialFeed:Feed}){
     const emit=()=>{
       const dream=corpus[index];
       setCurrent(dream);
+      setActiveCluster(dream.cluster);
+      setDropTick(v=>v+1);
       setCounts(prev=>({
         ...prev,
         [dream.cluster]:(prev[dream.cluster]||0)+1
@@ -192,7 +196,8 @@ export default function RadioDreamsClient({initialFeed}:{initialFeed:Feed}){
       </div>
 
       {current ? <article
-        className="radioMessage active"
+        key={dropTick}
+        className="radioMessage active radioMessageDrop"
         style={{"--accent":`hsl(${currentCfg?.hue||190} 100% 62%)`} as React.CSSProperties}
       >
         {currentMedia?.url && <div className="radioMedia">
@@ -211,13 +216,14 @@ export default function RadioDreamsClient({initialFeed}:{initialFeed:Feed}){
     </section>
 
     <section className="equalizerWrap">
-      <div className="leaderNote">{played}/{corpus.length} В ЭФИРЕ · СЕЙЧАС ЛИДИРУЕТ: <b>{leader.icon} {leader.label}</b></div>
+      <div className="leaderNote">{played}/{corpus.length} · <b>{leader.icon} {leader.label}</b></div>
       <div className="dreamEqualizer">
         {CLUSTERS.map(cluster=>{
           const value=counts[cluster.id]||0;
           const level=Math.max(2,Math.round((value/maxCount)*18));
           const isLeader=cluster.id===leader.id;
-          return <div className={"eqChannel"+(isLeader?" leader":"")} key={cluster.id}>
+          const isActive=activeCluster===cluster.id;
+          return <div className={"eqChannel"+(isLeader?" leader":"")+(isActive?" receiving":"")} key={cluster.id}>
             <div className="eqStack" title={cluster.label+" — "+value}>
               {Array.from({length:18},(_,i)=>{
                 const on=i<level;
@@ -241,7 +247,7 @@ export default function RadioDreamsClient({initialFeed}:{initialFeed:Feed}){
 
     <footer className="radioFooter">
       <span>REAL X POSTS · LAST 24 HOURS · EUROPE/LONDON</span>
-      <span>сообщение появляется → попадает в кластер → столбик растёт → звучит его нота</span>
+      <span>ATLAS OF DESIRES / RADIO DREAMS</span>
     </footer>
   </main>;
 }
