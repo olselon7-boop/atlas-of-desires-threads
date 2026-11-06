@@ -83,6 +83,9 @@ function canonicalize(text: string) {
 }
 
 function inferDeepDesire(text: string): DeepDesire {
+  const lower=text.toLowerCase();
+  const explicitSexStem=String.fromCharCode(1096,1083,1102,1093);
+  if (lower.includes(explicitSexStem)) return "sex_intimacy";
   for (const [pattern, label] of deepDesirePatterns) if (pattern.test(text)) return label;
   return /мечт|dream|wish|hope|хочу/iu.test(text) ? "other" : "unknown";
 }
