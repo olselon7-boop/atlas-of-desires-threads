@@ -33,10 +33,13 @@ type Dream = {
 
 type Feed = {
   source: string;
-  fetched_at: string;
+  date: string;
+  timezone: string;
+  start: string;
+  end: string;
+  total: number;
   posts: Dream[];
   cluster_counts: Record<string, number>;
-  cursors: { ru: string | null; en: string | null };
 };
 
 const CLUSTERS: Array<{
@@ -79,13 +82,12 @@ export default function RadioDreamsPage(){
   const [connected,setConnected]=useState(false);
   const [audioOn,setAudioOn]=useState(false);
   const [status,setStatus]=useState("ПОДКЛЮЧЕНИЕ К X");
-  const [lastUpdated,setLastUpdated]=useState<string|null>(null);
-  const [recent,setRecent]=useState<Dream[]>([]);
+  const [dayLabel,setDayLabel]=useState<string|null>(null);
+  const [corpus,setCorpus]=useState<Dream[]>([]);
+  const [played,setPlayed]=useState(0);
 
-  const cursors=useRef<{ru:string|null;en:string|null}>({ru:null,en:null});
-  const seen=useRef<Set<string>>(new Set());
   const audioCtx=useRef<AudioContext|null>(null);
-  const currentTimer=useRef<number|null>(null);
+  const playbackTimer=useRef<number|null>(null);
   const config=useMemo(()=>new Map(CLUSTERS.map(c=>[c.id,c])),[]);
 
   function playClusterSound(cluster:Cluster){
@@ -125,55 +127,25 @@ export default function RadioDreamsPage(){
     o1.stop(now+.44); o2.stop(now+.44);
   }
 
-  function showDream(dream:Dream){
-    setCurrent(dream);
-    if(currentTimer.current) window.clearTimeout(currentTimer.current);
-    currentTimer.current=window.setTimeout(()=>setCurrent(null),6200);
-  }
-
   useEffect(()=>{
     let stopped=false;
-    let pollTimer:number|undefined;
 
-    async function poll(initial=false){
+    async function loadDay(){
       try{
-        const qs=new URLSearchParams();
-        if(cursors.current.ru) qs.set("since_ru",cursors.current.ru);
-        if(cursors.current.en) qs.set("since_en",cursors.current.en);
-        const response=await fetch("/api/radio-dreams/live?"+qs.toString(),{cache:"no-store"});
+        setStatus("СОБИРАЕМ СУТКИ ИЗ X");
+        const response=await fetch("/api/radio-dreams/daily",{cache:"no-store"});
         const body=await response.json() as Feed & {error?:string};
-        if(!response.ok) throw new Error(body.error || "X feed error");
+        if(!response.ok) throw new Error(body.error || "X daily feed error");
         if(stopped) return;
 
-        cursors.current=body.cursors;
+        const usable=body.posts.filter(d=>config.has(d.cluster));
+        setCorpus(usable);
+        setCounts({});
+        setPlayed(0);
+        setCurrent(null);
+        setDayLabel(body.date);
         setConnected(true);
-        setStatus("LIVE / X");
-        setLastUpdated(body.fetched_at);
-
-        const incoming=body.posts
-          .filter(d=>config.has(d.cluster))
-          .filter(d=>!seen.current.has(d.id))
-          .reverse();
-
-        for(const d of incoming){
-          seen.current.add(d.id);
-          setCounts(prev=>({...prev,[d.cluster]:(prev[d.cluster]||0)+1}));
-        }
-
-        if(initial){
-          const seed=body.posts.filter(d=>config.has(d.cluster));
-          setRecent(seed.slice(0,24));
-          const initCounts:Record<string,number>={};
-          for(const d of seed) initCounts[d.cluster]=(initCounts[d.cluster]||0)+1;
-          setCounts(initCounts);
-          seed.forEach(d=>seen.current.add(d.id));
-          if(seed[0]) showDream(seed[0]);
-        }else if(incoming.length){
-          const latest=incoming[incoming.length-1];
-          setRecent(prev=>[latest,...prev.filter(x=>x.id!==latest.id)].slice(0,24));
-          showDream(latest);
-          playClusterSound(latest.cluster);
-        }
+        setStatus("СУТОЧНЫЙ ЭФИР / X");
       }catch(error){
         if(stopped) return;
         setConnected(false);
@@ -181,14 +153,32 @@ export default function RadioDreamsPage(){
       }
     }
 
-    void poll(true);
-    pollTimer=window.setInterval(()=>void poll(false),20000);
-    return ()=>{
-      stopped=true;
-      if(pollTimer) window.clearInterval(pollTimer);
-      if(currentTimer.current) window.clearTimeout(currentTimer.current);
+    void loadDay();
+    return ()=>{stopped=true};
+  },[config]);
+
+  useEffect(()=>{
+    if(!corpus.length) return;
+    let index=0;
+
+    const emit=()=>{
+      const dream=corpus[index];
+      setCurrent(dream);
+      setCounts(prev=>({...prev,[dream.cluster]:(prev[dream.cluster]||0)+1}));
+      setPlayed(index+1);
+      playClusterSound(dream.cluster);
+      index=(index+1)%corpus.length;
+      if(index===0){
+        window.setTimeout(()=>setCounts({}),900);
+      }
     };
-  },[config,audioOn]);
+
+    emit();
+    playbackTimer.current=window.setInterval(emit,5200);
+    return ()=>{
+      if(playbackTimer.current) window.clearInterval(playbackTimer.current);
+    };
+  },[corpus,audioOn]);
 
   const maxCount=Math.max(1,...CLUSTERS.map(c=>counts[c.id]||0));
   const leader=CLUSTERS.reduce((best,c)=>(counts[c.id]||0)>(counts[best.id]||0)?c:best,CLUSTERS[0]);
@@ -198,13 +188,13 @@ export default function RadioDreamsPage(){
   return <main className="radioDreams">
     <header className="radioHeader">
       <div>
-        <div className="radioKicker">ATLAS OF DESIRES / LIVE SIGNAL</div>
+        <div className="radioKicker">ATLAS OF DESIRES / DAILY BROADCAST</div>
         <h1>РАДИО МЕЧТЫ</h1>
       </div>
       <div className="radioStatus">
         <span className={connected?"liveDot on":"liveDot"} />
         <b>{status}</b>
-        {lastUpdated && <small>{formatTime(lastUpdated)}</small>}
+        {dayLabel && <small>{dayLabel} · {played}/{corpus.length}</small>}
         <button onClick={()=>{
           setAudioOn(v=>!v);
           if(!audioOn){
@@ -237,11 +227,11 @@ export default function RadioDreamsPage(){
           </div>
         </div>
       </article> :
-      <div className="radioIdle">слушаем, о чём мечтают люди прямо сейчас…</div>}
+      <div className="radioIdle">собираем завершившиеся сутки из X…</div>}
     </section>
 
     <section className="equalizerWrap">
-      <div className="leaderNote">СЕЙЧАС СИЛЬНЕЕ ВСЕГО ЗВУЧИТ: <b>{leader.icon} {leader.label}</b></div>
+      <div className="leaderNote">СИЛЬНЕЕ ВСЕГО В ЭТОМ ВЫПУСКЕ ЗВУЧИТ: <b>{leader.icon} {leader.label}</b></div>
       <div className="dreamEqualizer">
         {CLUSTERS.map(cluster=>{
           const value=counts[cluster.id]||0;
@@ -270,8 +260,8 @@ export default function RadioDreamsPage(){
     </section>
 
     <footer className="radioFooter">
-      <span>REAL X POSTS · RECENT SEARCH · AUTO REFRESH 20s</span>
-      <span>каждый новый сигнал добавляется в кластер и звучит своей нотой</span>
+      <span>REAL X POSTS · COMPLETE PREVIOUS DAY · EUROPE/LONDON</span>
+      <span>каждая мечта входит в свой кластер и звучит своей нотой</span>
     </footer>
   </main>;
 }
