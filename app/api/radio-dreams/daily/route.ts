@@ -75,14 +75,15 @@ function zonedLocalToUtc(
 
 function rolling24hSnapshot(timeZone = "Europe/London") {
   const now = new Date();
-  const start = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+  const end = new Date(now.getTime() - 60 * 1000);
+  const start = new Date(end.getTime() - 24 * 60 * 60 * 1000);
   const p = partsInZone(now, timeZone);
   const snapshotKey = `${p.year}-${String(p.month).padStart(2,"0")}-${String(p.day).padStart(2,"0")}`;
   return {
     date: snapshotKey,
     snapshotKey,
     start,
-    end: now,
+    end,
     timeZone,
   };
 }
@@ -106,7 +107,7 @@ async function fetchAll(token: string, query: string, start: Date, end: Date) {
       headers: {
         Authorization: `Bearer ${token}`,
         Accept: "application/json",
-        "User-Agent": "AtlasOfDesires/1.1 radio-dreams-rolling24h-v3",
+        "User-Agent": "AtlasOfDesires/1.1 radio-dreams-rolling24h-v4",
       },
       cache: "no-store",
     });
@@ -200,7 +201,7 @@ export async function GET() {
       select id, start_time, end_time
       from collection_runs
       where platform='x'
-        and query='radio-dreams-rolling24h-v3'
+        and query='radio-dreams-rolling24h-v4'
         and status='completed'
         and metadata->>'snapshot_key'=$1
       order by finished_at desc
@@ -231,7 +232,7 @@ export async function GET() {
           posts_new, posts_duplicate, estimated_cost_usd, status, finished_at, metadata
         )
         values (
-          'x','radio-dreams-rolling24h-v3',$1,$2,0,0,0,0,0,'completed',now(),
+          'x','radio-dreams-rolling24h-v4',$1,$2,0,0,0,0,0,'completed',now(),
           $3::jsonb
         )
       `, [
