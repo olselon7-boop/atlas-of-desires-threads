@@ -48,20 +48,22 @@ const deepDesirePatterns: Array<[RegExp, DeepDesire]> = [
 ];
 
 function expressionType(text: string): ExpressionType {
-  if (/^rts*@/iu.test(text)) return "legacy_retweet";
-  if (/(?:dreamt|dreamed|dreaming) last night|(?:in|from) my dream|мне приснил|сон приснил|приснилось/iu.test(text)) return "sleep_dream";
-  if (/lyrics?|quote|цитат|стих|текст песни|song lyrics/iu.test(text)) return "quote_lyrics";
-  if (/(?:sponsored|sale|discount|coupon|giveaway|offer)|скидк|промокод|реклам/iu.test(text)) return "advertisement";
-  if (/(?:breaking|reports?|according to|news)|новост|сообщает|по данным/iu.test(text)) return "news";
-  if (/(?:his|her|their) dream|его мечт|ее мечт|её мечт|их мечт/iu.test(text)) return "third_person";
+  if (/^rt\s*@/iu.test(text)) return "legacy_retweet";
+  if (/(?:dreamt|dreamed|dreaming) last night|(?:in|from) my dream|мне приснил|сон приснил|приснилось/iu.test(text)) return "sleep_dream";
+  if (/(?:lyrics?|quote)|цитат|стих|текст песни|song lyrics/iu.test(text)) return "quote_lyrics";
+  if (/(?:sponsored|sale|discount|coupon|giveaway|offer)|скидк|промокод|реклам/iu.test(text)) return "advertisement";
+  if (/(?:breaking|reports?|according to|news)|новост|сообщает|по данным/iu.test(text)) return "news";
+  if (/(?:his|her|their) dream|его мечт|ее мечт|её мечт|их мечт/iu.test(text)) return "third_person";
   if (/мечт|dream|wish|hope|хочу|хотелось/iu.test(text)) return "aspiration";
   return "other";
 }
 
 function aspirationSubject(text: string): AspirationSubject {
-  if (/(?:я|мне|мой|моя|мою|мы|нам|наш)|(?:i|me|my|mine|we|our)/iu.test(text)) return "self";
-  if (/(?:мы|нам|наш|people|everyone|we|our|общество|люди|все)/iu.test(text)) return "collective";
-  if (/(?:он|она|они|его|ее|её|их|he|she|they|his|her|their)/iu.test(text)) return "other";
+  const t = " " + text.toLowerCase().replace(/[^a-zа-яё0-9_]+/giu, " ") + " ";
+  if (/\s(?:я|мне|мой|моя|моё|мою|мои|мы|нам|наш|наша|наше|наши|i|me|my|mine|we|our)\s/iu.test(t)) return "self";
+  if (/(?:^|\s)(?:мечтаю|мечтал|мечтала|хочу|хотел|хотела|dreaming|dreamed)(?:\s|$)/iu.test(t)) return "self";
+  if (/\s(?:люди|все|общество|people|everyone)\s/iu.test(t)) return "collective";
+  if (/\s(?:он|она|они|его|ее|её|их|he|she|they|his|her|their)\s/iu.test(t)) return "other";
   return "unknown";
 }
 
