@@ -28,21 +28,23 @@ export type DeepDesire =
   | "recognition_status"
   | "community_justice"
   | "experience_pleasure"
+  | "sex_intimacy"
   | "other"
   | "unknown";
 
 const deepDesirePatterns: Array<[RegExp, DeepDesire]> = [
+  [/(?:секс|интим|эрот|проституц|sexual|intimacy|erotic|prostitut)/iu, "sex_intimacy"],
+  [/(?:\$\s*\d|\d+(?:[.,]\d+)?\s*(?:доллар|рубл|евро|pound|usd|eur)|цена|стоимост|деньг|богат|доход|финанс|зарплат|бюджет|машин|автомобил|купить|покуп|бензин|топлив|галлон|литр|price|cost|money|rich|wealth|financial|income|salary|budget|buy|buying|gas(?:oline)?|fuel|gallon)/iu, "money_material_security"],
   [/(любов|отношен|партнер|партнёр|парень|девуш|свадьб|marry|marriage|love|relationship|partner|boyfriend|girlfriend|husband|wife)/iu, "love_relationships"],
-  [/(дом|квартир|жиль|сво[йя]s+(?:дом|квартир)|home|house|apartment|housing|own place)/iu, "home_belonging"],
+  [/(дом|квартир|жиль|сво[йя]\s+(?:дом|квартир)|home|house|apartment|housing|own place)/iu, "home_belonging"],
   [/(поех|путешеств|переех|эмигр|релокац|море|стран|travel|trip|visit|move to|moving|emigrat|relocat|world tour)/iu, "travel_exploration"],
-  [/(работ|карьер|профес|бизнес|стартап|предприним|статьs+w+|job|career|business|startup|profession|become|photographer|singer|actor|actress)/iu, "career_self_realization"],
-  [/(богат|деньг|доход|финанс|машин|купить|покуп|money|rich|wealth|financial|income|car|buy|owning)/iu, "money_material_security"],
+  [/(работ|карьер|профес|бизнес|стартап|предприним|job|career|business|startup|profession|become|photographer|singer|actor|actress)/iu, "career_self_realization"],
   [/(свобод|независ|увол|уйти с работ|freedom|independen|quit|escape)/iu, "freedom_independence"],
   [/(рисов|музык|книг|писат|твор|искусств|играть на|music|write|book|art|creative|paint|piano|guitar)/iu, "creativity_expression"],
   [/(учить|учиться|образован|университет|экзамен|язык|learn|study|education|university|college|exam|language)/iu, "education_growth"],
   [/(семь|ребен|ребён|детей|родител|family|children|child|kids|parent)/iu, "family_children"],
   [/(здоров|тел[оа]|волос|похуд|менталь|wellbeing|well-being|health|body|hair|mental health)/iu, "health_wellbeing"],
-  [/(извест|признан|успех|слава|кумир|встретитьs+w+|recognition|famous|success|meet .*idol|award)/iu, "recognition_status"],
+  [/(извест|признан|успех|слава|кумир|recognition|famous|success|meet .*idol|award)/iu, "recognition_status"],
   [/(мир|справедлив|войн|общество|права|justice|peace|society|community|rights|election)/iu, "community_justice"],
   [/(концерт|фестиваль|снег|вечерин|удовольств|concert|festival|party|snow|experience)/iu, "experience_pleasure"],
 ];
