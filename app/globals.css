@@ -25,3 +25,7 @@
   45%{transform:scale(1.22);filter:brightness(1.8)}
   100%{transform:scale(1);filter:brightness(1)}
 }
+
+.eqStack{justify-content:flex-end;gap:2px;overflow:hidden}
+.eqStack span{height:4px;min-height:4px;border-radius:4px}
+.eqChannel.receiving .eqStack span.newest{animation:eqReceive .65s ease-out both}
