@@ -10,10 +10,22 @@ type XPost = {
   text: string;
   created_at?: string;
   lang?: string;
+  attachments?: { media_keys?: string[] };
 };
 
 type XResponse = {
   data?: XPost[];
+  includes?: {
+    media?: Array<{
+      media_key?: string;
+      type?: string;
+      url?: string;
+      preview_image_url?: string;
+      width?: number;
+      height?: number;
+      alt_text?: string;
+    }>;
+  };
   meta?: { newest_id?: string; oldest_id?: string; result_count?: number };
   title?: string;
   detail?: string;
@@ -62,6 +74,12 @@ export async function GET(req: NextRequest) {
       search(token, QUERIES[1].query, sinceEn)
     ]);
 
+    const mediaByKey = new Map(
+      [...(ru.includes?.media || []), ...(en.includes?.media || [])]
+        .filter(m => m.media_key)
+        .map(m => [m.media_key as string, m])
+    );
+
     const merged = [
       ...(ru.data || []).map(p => ({ ...p, source_language: "ru" })),
       ...(en.data || []).map(p => ({ ...p, source_language: "en" }))
@@ -80,7 +98,19 @@ export async function GET(req: NextRequest) {
           agency: e.agency,
           confidence: e.confidence,
           is_human_aspiration: e.is_human_aspiration,
-          permalink: `https://x.com/i/web/status/${post.id}`
+          permalink: `https://x.com/i/web/status/${post.id}`,
+          media: (post.attachments?.media_keys || [])
+            .map(key => mediaByKey.get(key))
+            .filter(Boolean)
+            .map(m => ({
+              type: m?.type || null,
+              url: m?.url || m?.preview_image_url || null,
+              preview_url: m?.preview_image_url || null,
+              width: m?.width || null,
+              height: m?.height || null,
+              alt_text: m?.alt_text || null
+            }))
+            .filter(m => m.url)
         };
       })
       .filter(p => p.is_human_aspiration)
