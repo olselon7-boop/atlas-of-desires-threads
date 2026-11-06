@@ -116,7 +116,7 @@ async function fetchAll(token: string, query: string, start: Date, end: Date) {
       headers: {
         Authorization: `Bearer ${token}`,
         Accept: "application/json",
-        "User-Agent": "AtlasOfDesires/1.1 radio-dreams-daily",
+        "User-Agent": "AtlasOfDesires/1.1 radio-dreams-daily-v2",
       },
       cache: "no-store",
     });
@@ -209,7 +209,7 @@ export async function GET() {
     const marker = await db.unsafe(`
       select id from collection_runs
       where platform='x'
-        and query='radio-dreams-daily'
+        and query='radio-dreams-daily-v2'
         and start_time=$1
         and end_time=$2
         and status='completed'
@@ -240,7 +240,7 @@ export async function GET() {
           posts_new, posts_duplicate, estimated_cost_usd, status, finished_at, metadata
         )
         values (
-          'x','radio-dreams-daily',$1,$2,0,0,0,0,0,'completed',now(),
+          'x','radio-dreams-daily-v2',$1,$2,0,0,0,0,0,'completed',now(),
           $3::jsonb
         )
       `, [
