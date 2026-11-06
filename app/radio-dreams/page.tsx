@@ -139,13 +139,16 @@ export default function RadioDreamsPage(){
         if(stopped) return;
 
         const usable=body.posts.filter(d=>config.has(d.cluster));
+        const finalCounts:Record<string,number>={};
+        for(const d of usable) finalCounts[d.cluster]=(finalCounts[d.cluster]||0)+1;
+
         setCorpus(usable);
-        setCounts({});
-        setPlayed(0);
-        setCurrent(null);
+        setCounts(finalCounts);
+        setPlayed(usable.length?1:0);
+        setCurrent(usable[0]||null);
         setDayLabel(body.date);
         setConnected(true);
-        setStatus("СУТОЧНЫЙ ЭФИР / X");
+        setStatus(usable.length ? `СУТОЧНЫЙ ЭФИР / X · ${usable.length} МЕЧТ` : "НЕТ ДАННЫХ");
       }catch(error){
         if(stopped) return;
         setConnected(false);
@@ -159,22 +162,17 @@ export default function RadioDreamsPage(){
 
   useEffect(()=>{
     if(!corpus.length) return;
-    let index=0;
+    let index=1;
 
     const emit=()=>{
-      const dream=corpus[index];
+      const dream=corpus[index % corpus.length];
       setCurrent(dream);
-      setCounts(prev=>({...prev,[dream.cluster]:(prev[dream.cluster]||0)+1}));
-      setPlayed(index+1);
+      setPlayed((index % corpus.length)+1);
       playClusterSound(dream.cluster);
       index=(index+1)%corpus.length;
-      if(index===0){
-        window.setTimeout(()=>setCounts({}),900);
-      }
     };
 
-    emit();
-    playbackTimer.current=window.setInterval(emit,5200);
+    playbackTimer.current=window.setInterval(emit,6200);
     return ()=>{
       if(playbackTimer.current) window.clearInterval(playbackTimer.current);
     };
@@ -227,11 +225,11 @@ export default function RadioDreamsPage(){
           </div>
         </div>
       </article> :
-      <div className="radioIdle">собираем завершившиеся сутки из X…</div>}
+      <div className="radioIdle">{connected ? "в этом выпуске нет распознанных кластеров" : "загружаем мечты из X…"}</div>}
     </section>
 
     <section className="equalizerWrap">
-      <div className="leaderNote">СИЛЬНЕЕ ВСЕГО В ЭТОМ ВЫПУСКЕ ЗВУЧИТ: <b>{leader.icon} {leader.label}</b></div>
+      <div className="leaderNote">{corpus.length} МЕЧТ · СИЛЬНЕЕ ВСЕГО ЗВУЧИТ: <b>{leader.icon} {leader.label}</b></div>
       <div className="dreamEqualizer">
         {CLUSTERS.map(cluster=>{
           const value=counts[cluster.id]||0;
