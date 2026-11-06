@@ -75,6 +75,13 @@ function formatTime(value:string|null){
   }catch{return ""}
 }
 
+function readingDurationMs(text:string){
+  const words=cleanText(text).split(/\s+/).filter(Boolean).length;
+  const wordsPerMinute=150;
+  const estimated=(words/wordsPerMinute)*60_000;
+  return Math.max(5_000,Math.min(18_000,estimated+1_800));
+}
+
 export default function RadioDreamsClient({initialFeed}:{initialFeed:Feed}){
   const initialCorpus=initialFeed.posts.filter(d=>CLUSTERS.some(c=>c.id===d.cluster));
   const [counts,setCounts]=useState<Record<string,number>>({});
@@ -133,10 +140,13 @@ export default function RadioDreamsClient({initialFeed}:{initialFeed:Feed}){
     if(!corpus.length) return;
 
     let index=0;
+    let stopped=false;
     setCounts({});
     setPlayed(0);
 
     const emit=()=>{
+      if(stopped || index>=corpus.length) return;
+
       const dream=corpus[index];
       setCurrent(dream);
       setActiveCluster(dream.cluster);
@@ -149,17 +159,18 @@ export default function RadioDreamsClient({initialFeed}:{initialFeed:Feed}){
       playClusterSound(dream.cluster);
 
       index+=1;
-      if(index>=corpus.length){
-        if(playbackTimer.current) window.clearInterval(playbackTimer.current);
+      if(index<corpus.length){
+        playbackTimer.current=window.setTimeout(emit,readingDurationMs(dream.text));
+      }else{
         playbackTimer.current=null;
       }
     };
 
     emit();
-    playbackTimer.current=window.setInterval(emit,6200);
 
     return ()=>{
-      if(playbackTimer.current) window.clearInterval(playbackTimer.current);
+      stopped=true;
+      if(playbackTimer.current) window.clearTimeout(playbackTimer.current);
     };
   },[corpus,audioOn]);
 
