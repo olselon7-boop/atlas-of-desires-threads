@@ -78,7 +78,7 @@ function formatTime(value:string|null){
 
 export default function RadioDreamsClient({initialFeed}:{initialFeed:Feed}){
   const initialCorpus=initialFeed.posts.filter(d=>CLUSTERS.some(c=>c.id===d.cluster));
-  const [counts,setCounts]=useState<Record<string,number>>(()=>({...initialFeed.cluster_counts}));
+  const [counts,setCounts]=useState<Record<string,number>>({});
   const [current,setCurrent]=useState<Dream|null>(initialCorpus[0]||null);
   const [connected,setConnected]=useState(initialCorpus.length>0);
   const [audioOn,setAudioOn]=useState(false);
@@ -130,17 +130,31 @@ export default function RadioDreamsClient({initialFeed}:{initialFeed:Feed}){
 
   useEffect(()=>{
     if(!corpus.length) return;
-    let index=1;
+
+    let index=0;
+    setCounts({});
+    setPlayed(0);
 
     const emit=()=>{
-      const dream=corpus[index % corpus.length];
+      const dream=corpus[index];
       setCurrent(dream);
-      setPlayed((index % corpus.length)+1);
+      setCounts(prev=>({
+        ...prev,
+        [dream.cluster]:(prev[dream.cluster]||0)+1
+      }));
+      setPlayed(index+1);
       playClusterSound(dream.cluster);
-      index=(index+1)%corpus.length;
+
+      index+=1;
+      if(index>=corpus.length){
+        if(playbackTimer.current) window.clearInterval(playbackTimer.current);
+        playbackTimer.current=null;
+      }
     };
 
+    emit();
     playbackTimer.current=window.setInterval(emit,6200);
+
     return ()=>{
       if(playbackTimer.current) window.clearInterval(playbackTimer.current);
     };
@@ -197,7 +211,7 @@ export default function RadioDreamsClient({initialFeed}:{initialFeed:Feed}){
     </section>
 
     <section className="equalizerWrap">
-      <div className="leaderNote">{corpus.length} МЕЧТ · СИЛЬНЕЕ ВСЕГО ЗВУЧИТ: <b>{leader.icon} {leader.label}</b></div>
+      <div className="leaderNote">{played}/{corpus.length} В ЭФИРЕ · СЕЙЧАС ЛИДИРУЕТ: <b>{leader.icon} {leader.label}</b></div>
       <div className="dreamEqualizer">
         {CLUSTERS.map(cluster=>{
           const value=counts[cluster.id]||0;
@@ -227,7 +241,7 @@ export default function RadioDreamsClient({initialFeed}:{initialFeed:Feed}){
 
     <footer className="radioFooter">
       <span>REAL X POSTS · LAST 24 HOURS · EUROPE/LONDON</span>
-      <span>каждая мечта входит в свой кластер и звучит своей нотой</span>
+      <span>сообщение появляется → попадает в кластер → столбик растёт → звучит его нота</span>
     </footer>
   </main>;
 }
