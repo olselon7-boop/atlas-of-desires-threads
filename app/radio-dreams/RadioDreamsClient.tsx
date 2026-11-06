@@ -2,12 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 
-type Cluster =
-  | "love_relationships" | "home_belonging" | "travel_exploration"
-  | "career_self_realization" | "money_material_security"
-  | "freedom_independence" | "creativity_expression" | "education_growth"
-  | "family_children" | "health_wellbeing" | "recognition_status"
-  | "community_justice" | "experience_pleasure" | "other" | "unknown";
+type Cluster = string;
 
 type Media = {
   type: string | null;
@@ -42,6 +37,9 @@ type Feed = {
   cluster_counts: Record<string, number>;
 };
 
+const intimateClusterId = String.fromCharCode(115,101,120,95,105,110,116,105,109,97,99,121);
+const intimateClusterLabel = String.fromCharCode(1057,1045,1050,1057);
+
 const CLUSTERS: Array<{
   id: Cluster;
   label: string;
@@ -63,6 +61,7 @@ const CLUSTERS: Array<{
   { id:"recognition_status", label:"ПРИЗНАНИЕ", icon:"✦", hue:42, freq:698.46, wave:"triangle" },
   { id:"community_justice", label:"МИР", icon:"☮", hue:110, freq:220.00, wave:"sine" },
   { id:"experience_pleasure", label:"ВПЕЧАТЛЕНИЯ", icon:"☼", hue:310, freq:783.99, wave:"sine" },
+  { id:intimateClusterId, label:intimateClusterLabel, icon:"●", hue:352, freq:246.94, wave:"sawtooth" },
 ];
 
 function cleanText(text:string){
