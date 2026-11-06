@@ -54,6 +54,10 @@ function expressionType(text: string): ExpressionType {
   if (/(?:sponsored|sale|discount|coupon|giveaway|offer)|скидк|промокод|реклам/iu.test(text)) return "advertisement";
   if (/(?:breaking|reports?|according to|news)|новост|сообщает|по данным/iu.test(text)) return "news";
   if (/(?:his|her|their) dream|его мечт|ее мечт|её мечт|их мечт/iu.test(text)) return "third_person";
+  if (
+    /(?:please|kindly|help me|support me|support my|donat(?:e|ing)|campaign|fund my|requesting for help|i am writing to you|dear (?:mr\.?|sir)|hello (?:mr\.?|sir)|@elonmusk|@elonmuskaoc|@elonmuskpd)/iu.test(text) ||
+    /(?:помогите|прошу помочь|поддержите|сбор средств|донат|кампания|обращаюсь к|уважаемый)/iu.test(text)
+  ) return "other";
   if (/мечт|dream|wish|hope|хочу|хотелось/iu.test(text)) return "aspiration";
   return "other";
 }
