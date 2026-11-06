@@ -73,28 +73,18 @@ function zonedLocalToUtc(
   return new Date(guess);
 }
 
-function previousCompletedDay(timeZone = "Europe/London") {
-  const nowParts = partsInZone(new Date(), timeZone);
-  const localTodayAsUtc = new Date(Date.UTC(nowParts.year, nowParts.month - 1, nowParts.day));
-  localTodayAsUtc.setUTCDate(localTodayAsUtc.getUTCDate() - 1);
-
-  const year = localTodayAsUtc.getUTCFullYear();
-  const month = localTodayAsUtc.getUTCMonth() + 1;
-  const day = localTodayAsUtc.getUTCDate();
-
-  const start = zonedLocalToUtc(year, month, day, 0, 0, 0, timeZone);
-  const nextLocal = new Date(Date.UTC(year, month - 1, day));
-  nextLocal.setUTCDate(nextLocal.getUTCDate() + 1);
-  const end = zonedLocalToUtc(
-    nextLocal.getUTCFullYear(),
-    nextLocal.getUTCMonth() + 1,
-    nextLocal.getUTCDate(),
-    0, 0, 0,
-    timeZone
-  );
-
-  const date = `${year}-${String(month).padStart(2,"0")}-${String(day).padStart(2,"0")}`;
-  return { date, start, end, timeZone };
+function rolling24hSnapshot(timeZone = "Europe/London") {
+  const now = new Date();
+  const start = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+  const p = partsInZone(now, timeZone);
+  const snapshotKey = `${p.year}-${String(p.month).padStart(2,"0")}-${String(p.day).padStart(2,"0")}`;
+  return {
+    date: snapshotKey,
+    snapshotKey,
+    start,
+    end: now,
+    timeZone,
+  };
 }
 
 async function fetchAll(token: string, query: string, start: Date, end: Date) {
@@ -116,7 +106,7 @@ async function fetchAll(token: string, query: string, start: Date, end: Date) {
       headers: {
         Authorization: `Bearer ${token}`,
         Accept: "application/json",
-        "User-Agent": "AtlasOfDesires/1.1 radio-dreams-daily-v2",
+        "User-Agent": "AtlasOfDesires/1.1 radio-dreams-rolling24h-v3",
       },
       cache: "no-store",
     });
@@ -202,19 +192,20 @@ export async function GET() {
   const dbUrl = process.env.POSTGRES_URL;
   if (!token || !dbUrl) return NextResponse.json({ error: "X or database is not configured" }, { status: 503 });
 
-  const day = previousCompletedDay("Europe/London");
+  const day = rolling24hSnapshot("Europe/London");
   const db = postgres(dbUrl, { max: 1, ssl: "require" });
 
   try {
     const marker = await db.unsafe(`
-      select id from collection_runs
+      select id, start_time, end_time
+      from collection_runs
       where platform='x'
-        and query='radio-dreams-daily-v2'
-        and start_time=$1
-        and end_time=$2
+        and query='radio-dreams-rolling24h-v3'
         and status='completed'
+        and metadata->>'snapshot_key'=$1
+      order by finished_at desc
       limit 1
-    `, [day.start.toISOString(), day.end.toISOString()]);
+    `, [day.snapshotKey]);
 
     if (!marker.length) {
       const [ruPages, enPages] = await Promise.all([
@@ -240,7 +231,7 @@ export async function GET() {
           posts_new, posts_duplicate, estimated_cost_usd, status, finished_at, metadata
         )
         values (
-          'x','radio-dreams-daily-v2',$1,$2,0,0,0,0,0,'completed',now(),
+          'x','radio-dreams-rolling24h-v3',$1,$2,0,0,0,0,0,'completed',now(),
           $3::jsonb
         )
       `, [
@@ -249,6 +240,7 @@ export async function GET() {
         JSON.stringify({
           mode: "radio-daily",
           date: day.date,
+          snapshot_key: day.snapshotKey,
           timezone: day.timeZone,
           ru_pages: ruPages.length,
           en_pages: enPages.length,
@@ -256,7 +248,9 @@ export async function GET() {
       ]);
     }
 
-    const rows = await readDailyFromDb(db, day.start, day.end);
+    const windowStart = marker.length ? new Date(marker[0].start_time) : day.start;
+    const windowEnd = marker.length ? new Date(marker[0].end_time) : day.end;
+    const rows = await readDailyFromDb(db, windowStart, windowEnd);
 
     const posts = rows.map((row: any) => ({
       id: row.source_id,
@@ -278,8 +272,8 @@ export async function GET() {
       source: "x_recent_daily",
       date: day.date,
       timezone: day.timeZone,
-      start: day.start.toISOString(),
-      end: day.end.toISOString(),
+      start: windowStart.toISOString(),
+      end: windowEnd.toISOString(),
       total: posts.length,
       posts,
       cluster_counts: clusterCounts,
