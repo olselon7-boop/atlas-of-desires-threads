@@ -220,22 +220,21 @@ export default function RadioDreamsClient({initialFeed}:{initialFeed:Feed}){
       <div className="dreamEqualizer">
         {CLUSTERS.map(cluster=>{
           const value=counts[cluster.id]||0;
-          const level=Math.max(2,Math.round((value/maxCount)*18));
           const isLeader=cluster.id===leader.id;
           const isActive=activeCluster===cluster.id;
           return <div className={"eqChannel"+(isLeader?" leader":"")+(isActive?" receiving":"")} key={cluster.id}>
             <div className="eqStack" title={cluster.label+" — "+value}>
-              {Array.from({length:18},(_,i)=>{
-                const on=i<level;
+              {Array.from({length:Math.max(1,value)},(_,i)=>{
+                const newest=i===value-1;
                 return <span
                   key={i}
-                  className={on?"on":""}
-                  style={on?{
-                    background:`hsl(${cluster.hue} 100% ${58+Math.min(i,8)*1.6}%)`,
-                    boxShadow:`0 0 12px hsl(${cluster.hue} 100% 58% / .55)`
-                  }:undefined}
+                  className={"on"+(newest && isActive?" newest":"")}
+                  style={{
+                    background:`hsl(${cluster.hue} 100% ${58+Math.min(i,8)*1.3}%)`,
+                    boxShadow:`0 0 10px hsl(${cluster.hue} 100% 58% / .5)`
+                  }}
                 />
-              }).reverse()}
+              })}
             </div>
             <div className="eqIcon" style={{color:`hsl(${cluster.hue} 100% 70%)`}}>{cluster.icon}</div>
             <div className="eqLabel">{cluster.label}</div>
