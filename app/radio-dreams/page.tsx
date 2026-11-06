@@ -260,7 +260,7 @@ export default function RadioDreamsPage(){
     </section>
 
     <footer className="radioFooter">
-      <span>REAL X POSTS · COMPLETE PREVIOUS DAY · EUROPE/LONDON</span>
+      <span>REAL X POSTS · LAST 24 HOURS · EUROPE/LONDON</span>
       <span>каждая мечта входит в свой кластер и звучит своей нотой</span>
     </footer>
   </main>;
