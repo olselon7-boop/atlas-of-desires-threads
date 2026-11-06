@@ -1,4 +1,5 @@
 import postgres from "postgres";
+import { enrichDesireText } from "@/lib/desire-enrichment";
 import RadioDreamsClient from "./RadioDreamsClient";
 
 export const dynamic = "force-dynamic";
@@ -70,18 +71,24 @@ async function getInitialFeed(){
       order by rp.source_created_at asc
     `,[start.toISOString(),end.toISOString()]);
 
-    const posts=rows.map((row:any)=>({
-      id:row.source_id,
-      text:row.text,
-      created_at:row.created_at,
-      language:row.language,
-      cluster:row.cluster,
-      state:row.state,
-      agency:row.agency,
-      confidence:Number(row.confidence||0),
-      permalink:`https://x.com/i/web/status/${row.source_id}`,
-      media:row.media||[]
-    }));
+    const posts=rows
+      .map((row:any)=>{
+        const enriched=enrichDesireText(row.text||"");
+        return {
+          id:row.source_id,
+          text:row.text,
+          created_at:row.created_at,
+          language:row.language,
+          cluster:enriched.deep_desire,
+          state:enriched.lifecycle_state,
+          agency:enriched.agency,
+          confidence:Number(enriched.confidence||0),
+          permalink:`https://x.com/i/web/status/${row.source_id}`,
+          media:row.media||[],
+          is_human_aspiration:enriched.is_human_aspiration
+        };
+      })
+      .filter((post:any)=>post.is_human_aspiration);
 
     const cluster_counts:Record<string,number>={};
     for(const post of posts) cluster_counts[post.cluster]=(cluster_counts[post.cluster]||0)+1;
