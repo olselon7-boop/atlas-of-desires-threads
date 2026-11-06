@@ -210,8 +210,8 @@ export default function RadioDreamsClient({initialFeed}:{initialFeed:Feed}){
         className="radioMessage active radioMessageDrop"
         style={{"--accent":`hsl(${currentCfg?.hue||190} 100% 62%)`} as React.CSSProperties}
       >
-        {currentMedia?.url && <div className="radioMedia">
-          <img src={currentMedia.url} alt={currentMedia.alt_text || ""} />
+        {(currentMedia?.url || currentMedia?.preview_url) && <div className="radioMedia">
+          <img src={currentMedia.url || currentMedia.preview_url || ""} alt={currentMedia.alt_text || ""} />
         </div>}
         <div className="radioMessageText">
           <div className="radioClusterTag">{currentCfg?.icon} {currentCfg?.label}</div>
