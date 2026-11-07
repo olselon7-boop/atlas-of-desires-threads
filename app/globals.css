@@ -29,3 +29,54 @@
 .eqStack{justify-content:flex-end;gap:2px;overflow:hidden}
 .eqStack span{height:4px;min-height:4px;border-radius:4px}
 .eqChannel.receiving .eqStack span.newest{animation:eqReceive .65s ease-out both}
+
+/* Radio-style VU pulse: counts stay literal, visual energy breathes continuously. */
+.eqChannel .eqStack{
+  transform-origin:50% 100%;
+  animation:radioVuBreath 1.15s ease-in-out infinite alternate;
+}
+.eqChannel:nth-child(2n) .eqStack{animation-duration:.92s}
+.eqChannel:nth-child(3n) .eqStack{animation-duration:1.34s}
+.eqChannel:nth-child(4n) .eqStack{animation-duration:.78s}
+.eqChannel:nth-child(5n) .eqStack{animation-duration:1.48s}
+
+.eqChannel .eqStack span.on{
+  animation:radioStripFlicker 1.05s ease-in-out infinite alternate;
+  transform-origin:center;
+}
+.eqChannel:nth-child(2n) .eqStack span.on{animation-duration:.82s}
+.eqChannel:nth-child(3n) .eqStack span.on{animation-duration:1.22s}
+
+.eqChannel.receiving .eqStack{
+  animation:radioVuActive .42s ease-in-out infinite alternate;
+}
+.eqChannel.receiving .eqStack span.on{
+  animation:radioStripActive .38s ease-in-out infinite alternate;
+}
+.eqChannel.receiving .eqIcon{
+  animation:eqIconPulse .48s ease-in-out infinite alternate;
+}
+
+@keyframes radioVuBreath{
+  0%{transform:scaleX(.88);filter:brightness(.72);opacity:.72}
+  100%{transform:scaleX(1);filter:brightness(1.15);opacity:1}
+}
+@keyframes radioStripFlicker{
+  0%{filter:brightness(.72);opacity:.68}
+  100%{filter:brightness(1.18);opacity:1}
+}
+@keyframes radioVuActive{
+  0%{transform:scaleX(.9);filter:brightness(1)}
+  100%{transform:scaleX(1.08);filter:brightness(1.9)}
+}
+@keyframes radioStripActive{
+  0%{transform:scaleX(.9);filter:brightness(1)}
+  100%{transform:scaleX(1.12);filter:brightness(2)}
+}
+@media (prefers-reduced-motion: reduce){
+  .eqChannel .eqStack,
+  .eqChannel .eqStack span.on,
+  .eqChannel.receiving .eqStack,
+  .eqChannel.receiving .eqStack span.on,
+  .eqChannel.receiving .eqIcon{animation:none!important}
+}
