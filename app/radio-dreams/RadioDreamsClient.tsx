@@ -83,24 +83,32 @@ function readingDurationMs(text:string){
 }
 
 export default function RadioDreamsClient({initialFeed}:{initialFeed:Feed}){
-  const initialCorpus=initialFeed.posts.filter(d=>CLUSTERS.some(c=>c.id===d.cluster));
+  const initialCorpus=initialFeed.posts
+    .filter(d=>CLUSTERS.some(c=>c.id===d.cluster))
+    .slice(-24);
   const [counts,setCounts]=useState<Record<string,number>>({});
   const [current,setCurrent]=useState<Dream|null>(initialCorpus[0]||null);
-  const [connected,setConnected]=useState(initialCorpus.length>0);
+  const [connected,setConnected]=useState(false);
   const [audioOn,setAudioOn]=useState(false);
-  const [status,setStatus]=useState(initialCorpus.length ? `СУТОЧНЫЙ ЭФИР / X · ${initialCorpus.length} МЕЧТ` : "НЕТ ДАННЫХ");
-  const [dayLabel,setDayLabel]=useState<string|null>(initialFeed.date||null);
-  const [corpus,setCorpus]=useState<Dream[]>(initialCorpus);
-  const [played,setPlayed]=useState(initialCorpus.length?1:0);
+  const [status,setStatus]=useState("ПОДКЛЮЧАЕМСЯ К X…");
+  const [played,setPlayed]=useState(0);
   const [activeCluster,setActiveCluster]=useState<Cluster|null>(initialCorpus[0]?.cluster||null);
   const [dropTick,setDropTick]=useState(0);
+  const [queueSize,setQueueSize]=useState(initialCorpus.length);
+  const [liveSeen,setLiveSeen]=useState(0);
 
   const audioCtx=useRef<AudioContext|null>(null);
+  const audioOnRef=useRef(false);
   const playbackTimer=useRef<number|null>(null);
+  const pollTimer=useRef<number|null>(null);
+  const queueRef=useRef<Dream[]>([...initialCorpus]);
+  const playingRef=useRef(false);
+  const seenIdsRef=useRef<Set<string>>(new Set(initialCorpus.map(d=>d.id)));
+  const cursorsRef=useRef<{ru:string|null;en:string|null}>({ru:null,en:null});
   const config=useMemo(()=>new Map(CLUSTERS.map(c=>[c.id,c])),[]);
 
   function playClusterSound(cluster:Cluster){
-    if(!audioOn) return;
+    if(!audioOnRef.current) return;
     const cfg=config.get(cluster);
     if(!cfg) return;
     const AC=window.AudioContext || (window as any).webkitAudioContext;
@@ -137,17 +145,19 @@ export default function RadioDreamsClient({initialFeed}:{initialFeed:Feed}){
   }
 
   useEffect(()=>{
-    if(!corpus.length) return;
+    audioOnRef.current=audioOn;
+  },[audioOn]);
 
-    let index=0;
+  useEffect(()=>{
     let stopped=false;
-    setCounts({});
-    setPlayed(0);
 
-    const emit=()=>{
-      if(stopped || index>=corpus.length) return;
+    const playNext=()=>{
+      if(stopped || playingRef.current) return;
+      const dream=queueRef.current.shift();
+      setQueueSize(queueRef.current.length);
+      if(!dream) return;
 
-      const dream=corpus[index];
+      playingRef.current=true;
       setCurrent(dream);
       setActiveCluster(dream.cluster);
       setDropTick(v=>v+1);
@@ -155,26 +165,66 @@ export default function RadioDreamsClient({initialFeed}:{initialFeed:Feed}){
         ...prev,
         [dream.cluster]:(prev[dream.cluster]||0)+1
       }));
-      setPlayed(index+1);
+      setPlayed(v=>v+1);
       playClusterSound(dream.cluster);
 
-      index+=1;
-      if(index<corpus.length){
-        playbackTimer.current=window.setTimeout(emit,readingDurationMs(dream.text));
-      }else{
-        playbackTimer.current=null;
+      playbackTimer.current=window.setTimeout(()=>{
+        playingRef.current=false;
+        playNext();
+      },readingDurationMs(dream.text));
+    };
+
+    const addDreams=(dreams:Dream[])=>{
+      const fresh=dreams
+        .filter(d=>CLUSTERS.some(c=>c.id===d.cluster))
+        .filter(d=>{
+          if(seenIdsRef.current.has(d.id)) return false;
+          seenIdsRef.current.add(d.id);
+          return true;
+        })
+        .sort((a,b)=>String(a.created_at).localeCompare(String(b.created_at)));
+
+      if(!fresh.length) return;
+      queueRef.current.push(...fresh);
+      setQueueSize(queueRef.current.length);
+      setLiveSeen(v=>v+fresh.length);
+      playNext();
+    };
+
+    const poll=async()=>{
+      try{
+        const q=new URLSearchParams();
+        if(cursorsRef.current.ru) q.set("since_ru",cursorsRef.current.ru);
+        if(cursorsRef.current.en) q.set("since_en",cursorsRef.current.en);
+        const response=await fetch("/api/radio-dreams/live"+(q.toString()?"?"+q.toString():""),{
+          cache:"no-store"
+        });
+        if(!response.ok) throw new Error("X "+response.status);
+        const feed=await response.json();
+        cursorsRef.current={
+          ru:feed.cursors?.ru||cursorsRef.current.ru,
+          en:feed.cursors?.en||cursorsRef.current.en
+        };
+        setConnected(true);
+        setStatus("LIVE / X");
+        addDreams(Array.isArray(feed.posts)?feed.posts:[]);
+      }catch{
+        setConnected(false);
+        setStatus("X: ПЕРЕПОДКЛЮЧЕНИЕ…");
       }
     };
 
-    emit();
+    playNext();
+    void poll();
+    pollTimer.current=window.setInterval(()=>void poll(),15000);
 
     return ()=>{
       stopped=true;
       if(playbackTimer.current) window.clearTimeout(playbackTimer.current);
+      if(pollTimer.current) window.clearInterval(pollTimer.current);
     };
-  },[corpus,audioOn]);
+  },[]);
 
-  const maxCount=Math.max(1,...CLUSTERS.map(c=>counts[c.id]||0));
   const leader=CLUSTERS.reduce((best,c)=>(counts[c.id]||0)>(counts[best.id]||0)?c:best,CLUSTERS[0]);
   const currentCfg=current?config.get(current.cluster):null;
   const currentMedia=current?.media?.find(m=>m.type==="photo"||m.type==="image") || current?.media?.[0];
@@ -188,10 +238,12 @@ export default function RadioDreamsClient({initialFeed}:{initialFeed:Feed}){
       <div className="radioStatus">
         <span className={connected?"liveDot on":"liveDot"} />
         <b>{status}</b>
-        {dayLabel && <small>{dayLabel} · {played}/{corpus.length}</small>}
+        <small>{liveSeen} НОВЫХ · {queueSize} В ОЧЕРЕДИ</small>
         <button onClick={()=>{
-          setAudioOn(v=>!v);
-          if(!audioOn){
+          const next=!audioOn;
+          setAudioOn(next);
+          audioOnRef.current=next;
+          if(next){
             const AC=window.AudioContext || (window as any).webkitAudioContext;
             audioCtx.current=audioCtx.current || new AC();
             void audioCtx.current.resume();
@@ -226,7 +278,7 @@ export default function RadioDreamsClient({initialFeed}:{initialFeed:Feed}){
     </section>
 
     <section className="equalizerWrap">
-      <div className="leaderNote">{played}/{corpus.length} · <b>{leader.icon} {leader.label}</b></div>
+      <div className="leaderNote">{played} В ЭФИРЕ · <b>{leader.icon} {leader.label}</b></div>
       <div className="dreamEqualizer">
         {CLUSTERS.map(cluster=>{
           const value=counts[cluster.id]||0;
@@ -255,7 +307,7 @@ export default function RadioDreamsClient({initialFeed}:{initialFeed:Feed}){
     </section>
 
     <footer className="radioFooter">
-      <span>REAL X POSTS · LAST 24 HOURS · EUROPE/LONDON</span>
+      <span>REAL X POSTS · LIVE RECENT SEARCH</span>
       <span>ATLAS OF DESIRES / RADIO DREAMS</span>
     </footer>
   </main>;
