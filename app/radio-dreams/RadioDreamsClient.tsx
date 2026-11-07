@@ -72,9 +72,39 @@ function dedupeKey(text:string){
   return cleanText(text)
     .toLowerCase()
     .replace(/@[a-z0-9_]+/gi,"")
+    .replace(/#[a-zа-яё0-9_]+/giu,"")
+    .replace(/\b(?:rt|via)\b/gi,"")
     .replace(/[^a-zа-яё0-9]+/giu," ")
     .replace(/\s+/g," ")
     .trim();
+}
+
+function tokenSet(text:string){
+  return new Set(dedupeKey(text).split(" ").filter(w=>w.length>2));
+}
+
+function nearDuplicate(a:string,b:string){
+  const ka=dedupeKey(a), kb=dedupeKey(b);
+  if(!ka || !kb) return false;
+  if(ka===kb) return true;
+  if((ka.length>24 && kb.includes(ka)) || (kb.length>24 && ka.includes(kb))) return true;
+
+  const A=tokenSet(a), B=tokenSet(b);
+  if(!A.size || !B.size) return false;
+  let common=0;
+  for(const t of A) if(B.has(t)) common++;
+  const union=A.size+B.size-common;
+  const jaccard=union?common/union:0;
+  const containment=common/Math.min(A.size,B.size);
+  return jaccard>=0.72 || (Math.min(A.size,B.size)>=5 && containment>=0.86);
+}
+
+function dedupeDreams(dreams:Dream[]){
+  const kept:Dream[]=[];
+  for(const dream of dreams){
+    if(!kept.some(prev=>nearDuplicate(prev.text,dream.text))) kept.push(dream);
+  }
+  return kept;
 }
 
 function formatTime(value:string|null){
@@ -92,13 +122,9 @@ function readingDurationMs(text:string){
 }
 
 export default function RadioDreamsClient({initialFeed}:{initialFeed:Feed}){
-  const initialCorpus=initialFeed.posts
-    .filter(d=>CLUSTERS.some(c=>c.id===d.cluster))
-    .filter((d,i,arr)=>{
-      const key=dedupeKey(d.text);
-      return !key || arr.findIndex(x=>dedupeKey(x.text)===key)===i;
-    })
-    .slice(-24);
+  const initialCorpus=dedupeDreams(
+    initialFeed.posts.filter(d=>CLUSTERS.some(c=>c.id===d.cluster))
+  ).slice(-24);
   const [counts,setCounts]=useState<Record<string,number>>({});
   const [current,setCurrent]=useState<Dream|null>(initialCorpus[0]||null);
   const [connected,setConnected]=useState(false);
@@ -118,6 +144,7 @@ export default function RadioDreamsClient({initialFeed}:{initialFeed:Feed}){
   const playingRef=useRef(false);
   const seenIdsRef=useRef<Set<string>>(new Set(initialCorpus.map(d=>d.id)));
   const seenTextRef=useRef<Set<string>>(new Set(initialCorpus.map(d=>dedupeKey(d.text)).filter(Boolean)));
+  const seenSamplesRef=useRef<string[]>(initialCorpus.map(d=>d.text));
   const cursorsRef=useRef<{ru:string|null;en:string|null}>({ru:null,en:null});
   const config=useMemo(()=>new Map(CLUSTERS.map(c=>[c.id,c])),[]);
 
@@ -167,6 +194,7 @@ export default function RadioDreamsClient({initialFeed}:{initialFeed:Feed}){
 
     const playNext=()=>{
       if(stopped || playingRef.current) return;
+      queueRef.current=dedupeDreams(queueRef.current);
       const dream=queueRef.current.shift();
       setQueueSize(queueRef.current.length);
       if(!dream) return;
@@ -195,8 +223,12 @@ export default function RadioDreamsClient({initialFeed}:{initialFeed:Feed}){
           const key=dedupeKey(d.text);
           if(seenIdsRef.current.has(d.id)) return false;
           if(key && seenTextRef.current.has(key)) return false;
+          if(seenSamplesRef.current.some(text=>nearDuplicate(text,d.text))) return false;
+
           seenIdsRef.current.add(d.id);
           if(key) seenTextRef.current.add(key);
+          seenSamplesRef.current.push(d.text);
+          if(seenSamplesRef.current.length>500) seenSamplesRef.current.shift();
           return true;
         })
         .sort((a,b)=>String(a.created_at).localeCompare(String(b.created_at)));
