@@ -68,6 +68,15 @@ function cleanText(text:string){
   return text.replace(/https?:\/\/\S+/g,"").replace(/\s+/g," ").trim();
 }
 
+function dedupeKey(text:string){
+  return cleanText(text)
+    .toLowerCase()
+    .replace(/@[a-z0-9_]+/gi,"")
+    .replace(/[^a-zа-яё0-9]+/giu," ")
+    .replace(/\s+/g," ")
+    .trim();
+}
+
 function formatTime(value:string|null){
   if(!value) return "";
   try{
@@ -85,6 +94,10 @@ function readingDurationMs(text:string){
 export default function RadioDreamsClient({initialFeed}:{initialFeed:Feed}){
   const initialCorpus=initialFeed.posts
     .filter(d=>CLUSTERS.some(c=>c.id===d.cluster))
+    .filter((d,i,arr)=>{
+      const key=dedupeKey(d.text);
+      return !key || arr.findIndex(x=>dedupeKey(x.text)===key)===i;
+    })
     .slice(-24);
   const [counts,setCounts]=useState<Record<string,number>>({});
   const [current,setCurrent]=useState<Dream|null>(initialCorpus[0]||null);
@@ -104,6 +117,7 @@ export default function RadioDreamsClient({initialFeed}:{initialFeed:Feed}){
   const queueRef=useRef<Dream[]>([...initialCorpus]);
   const playingRef=useRef(false);
   const seenIdsRef=useRef<Set<string>>(new Set(initialCorpus.map(d=>d.id)));
+  const seenTextRef=useRef<Set<string>>(new Set(initialCorpus.map(d=>dedupeKey(d.text)).filter(Boolean)));
   const cursorsRef=useRef<{ru:string|null;en:string|null}>({ru:null,en:null});
   const config=useMemo(()=>new Map(CLUSTERS.map(c=>[c.id,c])),[]);
 
@@ -178,8 +192,11 @@ export default function RadioDreamsClient({initialFeed}:{initialFeed:Feed}){
       const fresh=dreams
         .filter(d=>CLUSTERS.some(c=>c.id===d.cluster))
         .filter(d=>{
+          const key=dedupeKey(d.text);
           if(seenIdsRef.current.has(d.id)) return false;
+          if(key && seenTextRef.current.has(key)) return false;
           seenIdsRef.current.add(d.id);
+          if(key) seenTextRef.current.add(key);
           return true;
         })
         .sort((a,b)=>String(a.created_at).localeCompare(String(b.created_at)));
