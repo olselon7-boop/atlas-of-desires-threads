@@ -80,3 +80,26 @@
   .eqChannel.receiving .eqStack span.on,
   .eqChannel.receiving .eqIcon{animation:none!important}
 }
+
+.radioMessageLink{
+  color:inherit;
+  text-decoration:none;
+  cursor:pointer;
+}
+.radioMessageLink:focus-visible{
+  outline:2px solid currentColor;
+  outline-offset:5px;
+}
+.radioMessageLink::after{
+  content:"↗ X";
+  position:absolute;
+  right:14px;
+  bottom:12px;
+  font-size:11px;
+  letter-spacing:.08em;
+  opacity:.58;
+}
+@media (hover:hover) and (pointer:fine){
+  .radioMessageLink:hover{filter:brightness(1.06)}
+  .radioMessageLink:hover::after{opacity:1}
+}
