@@ -257,10 +257,14 @@ export default function RadioDreamsClient({initialFeed}:{initialFeed:Feed}){
         {Array.from({length:54},(_,i)=><i key={i} style={{height:(8+Math.abs(Math.sin(i*.53))*42)+"px"}} />)}
       </div>
 
-      {current ? <article
+      {current ? <a
         key={dropTick}
-        className="radioMessage active radioMessageDrop"
+        className="radioMessage active radioMessageDrop radioMessageLink"
         style={{"--accent":`hsl(${currentCfg?.hue||190} 100% 62%)`} as React.CSSProperties}
+        href={current.permalink}
+        target="_blank"
+        rel="noopener noreferrer"
+        aria-label="Открыть оригинальный пост в X"
       >
         {(currentMedia?.url || currentMedia?.preview_url) && <div className="radioMedia">
           <img src={currentMedia.url || currentMedia.preview_url || ""} alt={currentMedia.alt_text || ""} />
@@ -273,7 +277,7 @@ export default function RadioDreamsClient({initialFeed}:{initialFeed:Feed}){
             {current.state?.startsWith("fulfilled") && <b>✦ МЕЧТА СБЫЛАСЬ</b>}
           </div>
         </div>
-      </article> :
+      </a> :
       <div className="radioIdle">{connected ? "в этом выпуске нет распознанных кластеров" : "загружаем мечты из X…"}</div>}
     </section>
 
