@@ -43,25 +43,76 @@ type Feed = {
 const intimateClusterId = String.fromCharCode(115,101,120,95,105,110,116,105,109,97,99,121);
 const intimateClusterLabel = String.fromCharCode(1057,1045,1050,1057);
 
-function ClusterIcon({id,size=20}:{id:Cluster;size?:number}){
-  const common={fill:"none",stroke:"currentColor",strokeWidth:1.7,strokeLinecap:"round" as const,strokeLinejoin:"round" as const};
-  const paths:Record<string,React.ReactNode>={
-    love_relationships:<><path {...common} d="M12 20s-7-4.35-7-10a4 4 0 0 1 7-2.65A4 4 0 0 1 19 10c0 5.65-7 10-7 10Z"/></>,
-    home_belonging:<><path {...common} d="M4 11 12 4l8 7"/><path {...common} d="M6.5 10.5V20h11v-9.5M10 20v-5h4v5"/></>,
-    travel_exploration:<><path {...common} d="m3 13 18-7-6.5 15-2.3-6.2L6 12.5 3 13Z"/><path {...common} d="m12.2 14.8 3.6-3.6"/></>,
-    money_material_security:<><rect {...common} x="4" y="6" width="16" height="12" rx="2"/><path {...common} d="M7 10h10M7 14h6"/><circle {...common} cx="16.5" cy="14" r="1.5"/></>,
-    career_self_realization:<><path {...common} d="M12 3 14 8l5 .5-3.8 3.3 1.2 5.2L12 14.2 7.6 17l1.2-5.2L5 8.5 10 8l2-5Z"/></>,
-    family_children:<><circle {...common} cx="9" cy="9" r="3"/><circle {...common} cx="16.5" cy="10" r="2.4"/><path {...common} d="M4 20c.5-4 2.2-6 5-6s4.5 2 5 6M14 15.3c2.8-.6 5 .7 6 3.7"/></>,
-    creativity_expression:<><path {...common} d="m5 19 3.3-.7L18.5 8.1 15.9 5.5 5.7 15.7 5 19Z"/><path {...common} d="m14.8 6.6 2.6 2.6"/><path {...common} d="M5 5h4M7 3v4"/></>,
-    health_wellbeing:<><path {...common} d="M12 4v16M4 12h16"/><path {...common} d="M7 6.5c1.3-1.6 3-2.5 5-2.5s3.7.9 5 2.5"/></>,
-    education_growth:<><path {...common} d="m3 9 9-5 9 5-9 5-9-5Z"/><path {...common} d="M7 12v4.5c3 2 7 2 10 0V12M21 9v6"/></>,
-    freedom_independence:<><path {...common} d="M4 15c3.5 0 5.5-2 8-6 2.5 4 4.5 6 8 6"/><path {...common} d="M6 18c2.3 0 4-.9 6-3 2 2.1 3.7 3 6 3"/><path {...common} d="M12 5v10"/></>,
-    recognition_status:<><circle {...common} cx="12" cy="9" r="4"/><path {...common} d="m9.5 12.2-2 7 4.5-2 4.5 2-2-7"/><path {...common} d="m10.5 9 1 1 2-2"/></>,
-    community_justice:<><circle {...common} cx="12" cy="12" r="8"/><path {...common} d="M12 4v16M4 12h16"/><path {...common} d="M7 7c2 1.5 3.5 3 5 5s3 3.5 5 5"/></>,
-    experience_pleasure:<><circle {...common} cx="12" cy="12" r="3.5"/><path {...common} d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M18.4 5.6l-2.1 2.1M7.7 16.3l-2.1 2.1"/></>,
-    [intimateClusterId]:<><circle {...common} cx="8.5" cy="12" r="4"/><circle {...common} cx="15.5" cy="12" r="4"/><path {...common} d="M12 8.5v7"/></>
+function ClusterIcon({id,size=24}:{id:Cluster;size?:number}){
+  const line={fill:"none",stroke:"currentColor",strokeWidth:1.35,strokeLinecap:"round" as const,strokeLinejoin:"round" as const};
+  const dot=(cx:number,cy:number,r=.95)=><circle cx={cx} cy={cy} r={r} fill="currentColor"/>;
+  const glyphs:Record<string,React.ReactNode>={
+    love_relationships:<>
+      <circle {...line} cx="9" cy="12" r="4.2"/><circle {...line} cx="15" cy="12" r="4.2"/>
+      {dot(12,12,.8)}<path {...line} d="M4 18h16"/>
+    </>,
+    home_belonging:<>
+      <path {...line} d="M4 17h16M6 14h12M8 11h8M10 8h4"/>
+      {dot(12,5,1.15)}
+    </>,
+    travel_exploration:<>
+      <path {...line} d="M4 17 9 12l4 2 7-8"/>
+      {dot(4,17)}{dot(9,12)}{dot(13,14)}{dot(20,6)}
+      <path {...line} d="M17.5 6H20v2.5"/>
+    </>,
+    money_material_security:<>
+      <path {...line} d="M5 17h14M5 13h10M5 9h7M5 5h4"/>
+      {dot(19,17)}{dot(15,13)}{dot(12,9)}{dot(9,5)}
+    </>,
+    career_self_realization:<>
+      <circle {...line} cx="12" cy="12" r="6.8"/>
+      <path {...line} d="M12 2.8v3M12 18.2v3M2.8 12h3M18.2 12h3"/>
+      {dot(12,12,1.35)}
+    </>,
+    family_children:<>
+      <path {...line} d="M6 17 10 11l4 3 4-7"/>
+      {dot(6,17,1.35)}{dot(10,11,1.35)}{dot(14,14,1.35)}{dot(18,7,1.35)}
+    </>,
+    creativity_expression:<>
+      <path {...line} d="M4 16c3-8 6 4 9-4s5-3 7-6"/>
+      <path {...line} d="M4 19h16"/>
+      {dot(4,16)}{dot(13,12)}{dot(20,6)}
+    </>,
+    health_wellbeing:<>
+      <circle {...line} cx="12" cy="12" r="7"/>
+      <path {...line} d="M12 7v10M7 12h10"/>
+      <path {...line} d="M4.5 6.5h3M16.5 17.5h3"/>
+    </>,
+    education_growth:<>
+      <path {...line} d="M5 17h14M7 14h10M9 11h6M11 8h2"/>
+      {dot(12,5,1.2)}
+      <path {...line} d="M4 19.5h16"/>
+    </>,
+    freedom_independence:<>
+      <path {...line} d="M18 7a7 7 0 1 0 1 8"/>
+      <path {...line} d="M16 5h4v4"/>
+      {dot(12,12,1)}
+    </>,
+    recognition_status:<>
+      <circle {...line} cx="12" cy="12" r="3.2"/>
+      <circle {...line} cx="12" cy="12" r="7"/>
+      <path {...line} d="M12 2v3M12 19v3M2 12h3M19 12h3"/>
+    </>,
+    community_justice:<>
+      <path {...line} d="M4 12h16M12 4v16"/>
+      <circle {...line} cx="12" cy="12" r="7"/>
+      {dot(12,12,1.1)}
+    </>,
+    experience_pleasure:<>
+      <circle {...line} cx="12" cy="12" r="2.6"/>
+      <path {...line} d="M12 3v4M12 17v4M3 12h4M17 12h4M5.6 5.6l2.8 2.8M15.6 15.6l2.8 2.8"/>
+    </>,
+    [intimateClusterId]:<>
+      <circle {...line} cx="9" cy="12" r="4.5"/><circle {...line} cx="15" cy="12" r="4.5"/>
+      <path {...line} d="M12 6v12"/>{dot(12,12,1)}
+    </>
   };
-  return <svg className="clusterGlyph" width={size} height={size} viewBox="0 0 24 24" aria-hidden="true">{paths[id]||paths.experience_pleasure}</svg>;
+  return <svg className="clusterGlyph" width={size} height={size} viewBox="0 0 24 24" aria-hidden="true">{glyphs[id]||glyphs.experience_pleasure}</svg>;
 }
 
 const CLUSTERS: Array<{
