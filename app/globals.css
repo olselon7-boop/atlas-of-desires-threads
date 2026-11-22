@@ -655,3 +655,30 @@
     gap:14px 8px;
   }
 }
+
+
+/* Keep the p5 grid spatially fixed while dream cards change. */
+@media(min-width:821px){
+  .radioDreams{
+    grid-template-rows:auto 300px minmax(330px,1fr) auto;
+  }
+  .radioNow{
+    height:300px;
+    min-height:300px;
+    max-height:300px;
+    overflow:hidden;
+    align-items:center;
+  }
+  .radioMessage,
+  .radioMessage:has(.radioMedia),
+  .radioMessage:not(:has(.radioMedia)){
+    max-height:270px;
+    margin-top:0;
+  }
+  .radioMessageText{
+    max-height:238px;
+    overflow:auto;
+    scrollbar-width:none;
+  }
+  .radioMessageText::-webkit-scrollbar{display:none}
+}
