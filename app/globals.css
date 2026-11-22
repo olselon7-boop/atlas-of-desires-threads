@@ -103,3 +103,100 @@
   .radioMessageLink:hover{filter:brightness(1.06)}
   .radioMessageLink:hover::after{opacity:1}
 }
+
+/* Radio Dreams desktop cleanup: centered live card, X-like typography, no top rainbow wave */
+.radioDreams{
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+}
+.radioNow{
+  min-height:0;
+  display:flex;
+  align-items:flex-start;
+  justify-content:center;
+  padding:18px 0 8px;
+}
+.radioWave{display:none!important}
+.radioMessage{
+  position:relative;
+  width:min(760px,calc(100vw - 64px));
+  margin:0 auto;
+  grid-template-columns:minmax(0,240px) minmax(0,1fr);
+  align-items:stretch;
+  gap:18px;
+  padding:16px;
+}
+.radioMessage:not(:has(.radioMedia)){
+  grid-template-columns:1fr;
+}
+.radioMessageText{
+  justify-content:flex-start;
+  padding:4px 8px 6px;
+  min-width:0;
+}
+.radioMessage p{
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  font-size:clamp(19px,2vw,27px);
+  line-height:1.28;
+  font-weight:400;
+  letter-spacing:0;
+  margin:12px 0 18px;
+  max-width:100%;
+  overflow-wrap:anywhere;
+}
+.radioClusterTag,
+.radioMessageMeta,
+.radioStatus,
+.radioKicker,
+.leaderNote,
+.eqLabel,
+.eqCount,
+.radioFooter{
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+}
+.radioMedia{
+  min-height:0;
+  max-height:none;
+  aspect-ratio:1/1;
+  border-radius:12px;
+}
+.radioMedia img{
+  object-fit:cover;
+}
+.equalizerWrap{
+  width:min(1180px,calc(100vw - 56px));
+  margin:0 auto;
+}
+.radioHeader{
+  width:min(1180px,calc(100vw - 56px));
+  margin:0 auto;
+}
+.radioFooter{
+  width:min(1180px,calc(100vw - 56px));
+  margin:0 auto;
+}
+@media(max-width:900px){
+  .radioMessage{
+    width:min(680px,calc(100vw - 36px));
+    grid-template-columns:1fr;
+  }
+  .radioMedia{
+    width:100%;
+    max-height:360px;
+    aspect-ratio:auto;
+  }
+  .radioMedia img{
+    max-height:360px;
+  }
+}
+@media(max-width:700px){
+  .radioNow{padding-top:8px}
+  .radioMessage{
+    width:100%;
+    margin:0;
+    padding:14px;
+  }
+  .radioMessage p{
+    font-size:21px;
+    line-height:1.3;
+  }
+}
