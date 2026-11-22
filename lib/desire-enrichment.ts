@@ -51,6 +51,9 @@ const deepDesirePatterns: Array<[RegExp, DeepDesire]> = [
 
 function expressionType(text: string): ExpressionType {
   if (/^rt\s*@/iu.test(text)) return "legacy_retweet";
+  if (/(?:new blog post|read more|click here|learn more|startupstory|newsletter|article|blog post|новый пост|читать далее|подробнее|ссылка в|реклама)/iu.test(text)) return "advertisement";
+  if (/(?:his dream|her dream|their dream|your dream|someone'?s dream|trump'?s dream|мечта (?:его|ее|её|их|трампа)|его мечт|ее мечт|её мечт|их мечт)/iu.test(text)) return "third_person";
+  if (/(?:career you have always dreamed of|job you have always dreamed of|life you have always dreamed of|the .* you have always dreamed of)/iu.test(text)) return "other";
   if (/(?:\bты\s+(?:жив[её]шь|живешь)\s+(?:своей|свою)\s+мечт|\bживи\s+(?:своей|свою)\s+мечт|\bвы\s+(?:жив[её]те|живете)\s+(?:своей|свою)\s+мечт|\byou(?:'re| are)\s+living\s+your\s+dream|\blive\s+your\s+dream|\byou\s+live\s+your\s+dream)/iu.test(text)) return "other";
   if (/(?:dreamt|dreamed|dreaming) last night|(?:in|from) my dream|i (?:keep )?dream(?:ed|t|ing)? about|i dream about him|i dream about her|while i sleep|when i sleep|sleep to .*dream|dream every night|nightmare|daymare|мне приснил|сон приснил|приснилось|снилось|мне снится|мне снился|мне снилась|вижу во сне|сон про|сны про|сны о/iu.test(text)) return "sleep_dream";
   if (/(?:lyrics?|quote)|цитат|стих|текст песни|song lyrics/iu.test(text)) return "quote_lyrics";
@@ -99,6 +102,7 @@ export function enrichDesireText(text: string) {
   const isHumanAspiration =
     type === "aspiration" &&
     firstPerson &&
+    !/(?:\byou\b|\byour\b|\bты\b|\bтебя\b|\bтвой\b|\bваш\b)/iu.test(text.replace(/^(?:i|я)\b.{0,20}/iu,"")) &&
     !/(?:sleep|asleep|nightmare|daymare|every night|while i sleep|when i sleep|во сне|приснил|приснилось|снилось|мне снится|сон про|сны про|сны о)/iu.test(text) &&
     !/(?:\bты\s+(?:жив[её]шь|живешь)\s+(?:своей|свою)\s+мечт|\bживи\s+(?:своей|свою)\s+мечт|\bвы\s+(?:жив[её]те|живете)\s+(?:своей|свою)\s+мечт|\byou(?:'re| are)\s+living\s+your\s+dream|\blive\s+your\s+dream|\byou\s+live\s+your\s+dream)/iu.test(text) &&
     !/^rt\s*@/iu.test(text);
