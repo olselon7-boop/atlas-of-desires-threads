@@ -51,6 +51,7 @@ const deepDesirePatterns: Array<[RegExp, DeepDesire]> = [
 
 function expressionType(text: string): ExpressionType {
   if (/^rt\s*@/iu.test(text)) return "legacy_retweet";
+  if (/(?:\bты\s+(?:жив[её]шь|живешь)\s+(?:своей|свою)\s+мечт|\bживи\s+(?:своей|свою)\s+мечт|\bвы\s+(?:жив[её]те|живете)\s+(?:своей|свою)\s+мечт|\byou(?:'re| are)\s+living\s+your\s+dream|\blive\s+your\s+dream|\byou\s+live\s+your\s+dream)/iu.test(text)) return "other";
   if (/(?:dreamt|dreamed|dreaming) last night|(?:in|from) my dream|i (?:keep )?dream(?:ed|t|ing)? about|i dream about him|i dream about her|while i sleep|when i sleep|sleep to .*dream|dream every night|nightmare|daymare|мне приснил|сон приснил|приснилось|снилось|мне снится|мне снился|мне снилась|вижу во сне|сон про|сны про|сны о/iu.test(text)) return "sleep_dream";
   if (/(?:lyrics?|quote)|цитат|стих|текст песни|song lyrics/iu.test(text)) return "quote_lyrics";
   if (/(?:sponsored|sale|discount|coupon|giveaway|offer)|скидк|промокод|реклам/iu.test(text)) return "advertisement";
@@ -99,6 +100,7 @@ export function enrichDesireText(text: string) {
     type === "aspiration" &&
     firstPerson &&
     !/(?:sleep|asleep|nightmare|daymare|every night|while i sleep|when i sleep|во сне|приснил|приснилось|снилось|мне снится|сон про|сны про|сны о)/iu.test(text) &&
+    !/(?:\bты\s+(?:жив[её]шь|живешь)\s+(?:своей|свою)\s+мечт|\bживи\s+(?:своей|свою)\s+мечт|\bвы\s+(?:жив[её]те|живете)\s+(?:своей|свою)\s+мечт|\byou(?:'re| are)\s+living\s+your\s+dream|\blive\s+your\s+dream|\byou\s+live\s+your\s+dream)/iu.test(text) &&
     !/^rt\s*@/iu.test(text);
 
   return {
