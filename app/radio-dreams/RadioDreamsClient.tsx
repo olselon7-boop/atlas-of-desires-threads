@@ -281,7 +281,7 @@ export default function RadioDreamsClient({initialFeed}:{initialFeed:Feed}){
   return <main className="radioDreams">
     <header className="radioHeader">
       <div>
-        <div className="radioKicker">ATLAS OF DESIRES / DAILY BROADCAST</div>
+        <div className="radioKicker">ATLAS OF DESIRES / LIVE X</div>
         <h1>РАДИО МЕЧТЫ</h1>
       </div>
       <div className="radioStatus">
@@ -302,10 +302,6 @@ export default function RadioDreamsClient({initialFeed}:{initialFeed:Feed}){
     </header>
 
     <section className="radioNow">
-      <div className="radioWave" aria-hidden="true">
-        {Array.from({length:54},(_,i)=><i key={i} style={{height:(8+Math.abs(Math.sin(i*.53))*42)+"px"}} />)}
-      </div>
-
       {current ? <a
         key={dropTick}
         className="radioMessage active radioMessageDrop radioMessageLink"
