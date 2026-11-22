@@ -515,3 +515,32 @@
   object-fit:cover;
   display:block;
 }
+
+
+/* Unified infographic icon language */
+.eqIcon{
+  width:36px;
+  height:36px;
+  min-width:36px;
+  min-height:36px;
+  border:1px solid currentColor;
+  border-radius:8px;
+  display:grid;
+  place-items:center;
+  background:color-mix(in srgb,currentColor,transparent 94%);
+  box-sizing:border-box;
+}
+.clusterGlyph{
+  display:block;
+  overflow:visible;
+}
+.radioClusterTag{
+  display:flex;
+  align-items:center;
+  gap:7px;
+}
+.leaderNote b{
+  display:inline-flex;
+  align-items:center;
+  gap:5px;
+}
