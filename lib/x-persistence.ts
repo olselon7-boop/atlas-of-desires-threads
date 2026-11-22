@@ -32,6 +32,9 @@ export async function persistXSearchResponse(input: {
   query: string;
   year: number;
   estimatedCostUsd: number;
+  mode?: string;
+  startTime?: string;
+  endTime?: string;
 }) {
   const url = process.env.POSTGRES_URL;
   if (!url) throw new Error("POSTGRES_URL is not configured");
@@ -44,7 +47,7 @@ export async function persistXSearchResponse(input: {
   try {
     const runRows = await db.unsafe(
       "insert into collection_runs (platform, query, start_time, end_time, posts_requested, posts_received, estimated_cost_usd, status, metadata) values ($1,$2,$3,$4,$5,$6,$7,$8,$9::jsonb) returning id",
-      ["x", input.query, input.year + "-01-01T00:00:00Z", input.year + "-12-31T23:59:59Z", 10, input.response.data?.length || 0, input.estimatedCostUsd, "completed", JSON.stringify({ mode: "high-recall", year: input.year })]
+      ["x", input.query, input.startTime || input.year + "-01-01T00:00:00Z", input.endTime || input.year + "-12-31T23:59:59Z", 100, input.response.data?.length || 0, input.estimatedCostUsd, "completed", JSON.stringify({ mode: input.mode || "high-recall", year: input.year })]
     );
     const runId = runRows[0].id as string;
 
