@@ -145,7 +145,9 @@ export async function getRadioDreamCursors() {
     const rows = await db.unsafe("select language, cursor from radio_dream_cursors where language in ('ru','en')");
     const cursors: { ru: string | null; en: string | null } = { ru: null, en: null };
     for (const row of rows) {
-      if (row.language === "ru" || row.language === "en") cursors[row.language] = row.cursor || null;
+      const language = String(row.language || "");
+      if (language === "ru") cursors.ru = row.cursor || null;
+      if (language === "en") cursors.en = row.cursor || null;
     }
     return cursors;
   } finally {
