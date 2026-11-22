@@ -98,7 +98,7 @@ export default function P5Infographic({
           const left=w<760?10:18;
           const right=w<760?10:18;
           const top=18;
-          const baseline=h-54;
+          const baseline=h-82;
           const laneW=(w-left-right)/st.clusters.length;
 
           // Horizontal technical grid.
@@ -137,22 +137,32 @@ export default function P5Infographic({
             p.strokeWeight(.75);
             p.line(cx,top,cx,baseline+8);
 
-            // Data glyph / node system.
-            const gy=baseline+24;
-            p.stroke(cluster.hue,78,68,.64);
-            p.strokeWeight(1);
-            p.circle(cx,gy,11);
-            p.circle(cx,gy,4);
+            // Single compact infographic row: glyph + label + count.
+            const gy=baseline+20;
+            p.stroke(cluster.hue,78,68,active?.92:.58);
+            p.strokeWeight(active?1.25:1);
+            p.circle(cx,gy,9);
+            p.circle(cx,gy,2.6);
             if(i%3===0){
-              p.arc(cx,gy,22,22,p.PI*.2,p.PI*1.4);
+              p.arc(cx,gy,18,18,p.PI*.15,p.PI*1.35);
             }else if(i%3===1){
-              p.line(cx-10,gy,cx+10,gy);
-              p.circle(cx-10,gy,2.8);
-              p.circle(cx+10,gy,2.8);
+              p.line(cx-8,gy,cx+8,gy);
+              p.circle(cx-8,gy,2.2);
+              p.circle(cx+8,gy,2.2);
             }else{
-              p.line(cx,gy-11,cx,gy+11);
-              p.line(cx-7,gy+6,cx+7,gy-6);
+              p.line(cx,gy-8,cx,gy+8);
+              p.line(cx-5.5,gy+5,cx+5.5,gy-5);
             }
+
+            p.noStroke();
+            p.fill(0,0,100,active?.92:.62);
+            p.textAlign(p.CENTER,p.CENTER);
+            p.textSize(w<760?5.6:6.8);
+            p.text(cluster.label,cx,baseline+42);
+            p.fill(cluster.hue,78,72,active?1:.72);
+            p.textSize(w<760?8:10);
+            p.text(String(value),cx,baseline+59);
+            p.noFill();
 
             // One literal dream = one signal strip.
             const step=7;
