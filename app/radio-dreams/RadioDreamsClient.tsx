@@ -43,6 +43,27 @@ type Feed = {
 const intimateClusterId = String.fromCharCode(115,101,120,95,105,110,116,105,109,97,99,121);
 const intimateClusterLabel = String.fromCharCode(1057,1045,1050,1057);
 
+function ClusterIcon({id,size=20}:{id:Cluster;size?:number}){
+  const common={fill:"none",stroke:"currentColor",strokeWidth:1.7,strokeLinecap:"round" as const,strokeLinejoin:"round" as const};
+  const paths:Record<string,React.ReactNode>={
+    love_relationships:<><path {...common} d="M12 20s-7-4.35-7-10a4 4 0 0 1 7-2.65A4 4 0 0 1 19 10c0 5.65-7 10-7 10Z"/></>,
+    home_belonging:<><path {...common} d="M4 11 12 4l8 7"/><path {...common} d="M6.5 10.5V20h11v-9.5M10 20v-5h4v5"/></>,
+    travel_exploration:<><path {...common} d="m3 13 18-7-6.5 15-2.3-6.2L6 12.5 3 13Z"/><path {...common} d="m12.2 14.8 3.6-3.6"/></>,
+    money_material_security:<><rect {...common} x="4" y="6" width="16" height="12" rx="2"/><path {...common} d="M7 10h10M7 14h6"/><circle {...common} cx="16.5" cy="14" r="1.5"/></>,
+    career_self_realization:<><path {...common} d="M12 3 14 8l5 .5-3.8 3.3 1.2 5.2L12 14.2 7.6 17l1.2-5.2L5 8.5 10 8l2-5Z"/></>,
+    family_children:<><circle {...common} cx="9" cy="9" r="3"/><circle {...common} cx="16.5" cy="10" r="2.4"/><path {...common} d="M4 20c.5-4 2.2-6 5-6s4.5 2 5 6M14 15.3c2.8-.6 5 .7 6 3.7"/></>,
+    creativity_expression:<><path {...common} d="m5 19 3.3-.7L18.5 8.1 15.9 5.5 5.7 15.7 5 19Z"/><path {...common} d="m14.8 6.6 2.6 2.6"/><path {...common} d="M5 5h4M7 3v4"/></>,
+    health_wellbeing:<><path {...common} d="M12 4v16M4 12h16"/><path {...common} d="M7 6.5c1.3-1.6 3-2.5 5-2.5s3.7.9 5 2.5"/></>,
+    education_growth:<><path {...common} d="m3 9 9-5 9 5-9 5-9-5Z"/><path {...common} d="M7 12v4.5c3 2 7 2 10 0V12M21 9v6"/></>,
+    freedom_independence:<><path {...common} d="M4 15c3.5 0 5.5-2 8-6 2.5 4 4.5 6 8 6"/><path {...common} d="M6 18c2.3 0 4-.9 6-3 2 2.1 3.7 3 6 3"/><path {...common} d="M12 5v10"/></>,
+    recognition_status:<><circle {...common} cx="12" cy="9" r="4"/><path {...common} d="m9.5 12.2-2 7 4.5-2 4.5 2-2-7"/><path {...common} d="m10.5 9 1 1 2-2"/></>,
+    community_justice:<><circle {...common} cx="12" cy="12" r="8"/><path {...common} d="M12 4v16M4 12h16"/><path {...common} d="M7 7c2 1.5 3.5 3 5 5s3 3.5 5 5"/></>,
+    experience_pleasure:<><circle {...common} cx="12" cy="12" r="3.5"/><path {...common} d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M18.4 5.6l-2.1 2.1M7.7 16.3l-2.1 2.1"/></>,
+    [intimateClusterId]:<><circle {...common} cx="8.5" cy="12" r="4"/><circle {...common} cx="15.5" cy="12" r="4"/><path {...common} d="M12 8.5v7"/></>
+  };
+  return <svg className="clusterGlyph" width={size} height={size} viewBox="0 0 24 24" aria-hidden="true">{paths[id]||paths.experience_pleasure}</svg>;
+}
+
 const CLUSTERS: Array<{
   id: Cluster;
   label: string;
@@ -51,20 +72,20 @@ const CLUSTERS: Array<{
   freq: number;
   wave: OscillatorType;
 }> = [
-  { id:"love_relationships", label:"ЛЮБОВЬ", icon:"♥", hue:330, freq:392.00, wave:"sine" },
-  { id:"home_belonging", label:"ДОМ", icon:"⌂", hue:24, freq:261.63, wave:"triangle" },
-  { id:"travel_exploration", label:"ПУТЕШЕСТВИЯ", icon:"✈", hue:192, freq:523.25, wave:"sine" },
-  { id:"money_material_security", label:"ДЕНЬГИ", icon:"$", hue:135, freq:329.63, wave:"square" },
-  { id:"career_self_realization", label:"УСПЕХ", icon:"★", hue:54, freq:440.00, wave:"triangle" },
-  { id:"family_children", label:"СЕМЬЯ", icon:"◉", hue:6, freq:349.23, wave:"sine" },
-  { id:"creativity_expression", label:"ТВОРЧЕСТВО", icon:"✎", hue:286, freq:587.33, wave:"triangle" },
-  { id:"health_wellbeing", label:"ЗДОРОВЬЕ", icon:"✚", hue:164, freq:293.66, wave:"sine" },
-  { id:"education_growth", label:"ОБРАЗОВАНИЕ", icon:"⌑", hue:205, freq:659.25, wave:"triangle" },
-  { id:"freedom_independence", label:"СВОБОДА", icon:"◎", hue:248, freq:493.88, wave:"sine" },
-  { id:"recognition_status", label:"ПРИЗНАНИЕ", icon:"✦", hue:42, freq:698.46, wave:"triangle" },
-  { id:"community_justice", label:"МИР", icon:"☮", hue:110, freq:220.00, wave:"sine" },
-  { id:"experience_pleasure", label:"ВПЕЧАТЛЕНИЯ", icon:"☼", hue:310, freq:783.99, wave:"sine" },
-  { id:intimateClusterId, label:intimateClusterLabel, icon:"●", hue:352, freq:246.94, wave:"sawtooth" },
+  { id:"love_relationships", label:"ЛЮБОВЬ", hue:330, freq:392.00, wave:"sine" },
+  { id:"home_belonging", label:"ДОМ", hue:24, freq:261.63, wave:"triangle" },
+  { id:"travel_exploration", label:"ПУТЕШЕСТВИЯ", hue:192, freq:523.25, wave:"sine" },
+  { id:"money_material_security", label:"ДЕНЬГИ", hue:135, freq:329.63, wave:"square" },
+  { id:"career_self_realization", label:"УСПЕХ", hue:54, freq:440.00, wave:"triangle" },
+  { id:"family_children", label:"СЕМЬЯ", hue:6, freq:349.23, wave:"sine" },
+  { id:"creativity_expression", label:"ТВОРЧЕСТВО", hue:286, freq:587.33, wave:"triangle" },
+  { id:"health_wellbeing", label:"ЗДОРОВЬЕ", hue:164, freq:293.66, wave:"sine" },
+  { id:"education_growth", label:"ОБРАЗОВАНИЕ", hue:205, freq:659.25, wave:"triangle" },
+  { id:"freedom_independence", label:"СВОБОДА", hue:248, freq:493.88, wave:"sine" },
+  { id:"recognition_status", label:"ПРИЗНАНИЕ", hue:42, freq:698.46, wave:"triangle" },
+  { id:"community_justice", label:"МИР", hue:110, freq:220.00, wave:"sine" },
+  { id:"experience_pleasure", label:"ВПЕЧАТЛЕНИЯ", hue:310, freq:783.99, wave:"sine" },
+  { id:intimateClusterId, label:intimateClusterLabel, hue:352, freq:246.94, wave:"sawtooth" },
 ];
 
 function cleanText(text:string){
@@ -339,7 +360,7 @@ export default function RadioDreamsClient({initialFeed}:{initialFeed:Feed}){
             : <img src={currentMedia.url || currentMedia.preview_url || ""} alt={currentMedia.alt_text || ""} />}
         </div>}
         <div className="radioMessageText">
-          <div className="radioClusterTag">{currentCfg?.icon} {currentCfg?.label}</div>
+          <div className="radioClusterTag"><ClusterIcon id={current.cluster} size={15}/> {currentCfg?.label}</div>
           <p>{cleanText(current.text)}</p>
           <div className="radioMessageMeta">
             <span>{formatTime(current.created_at)} · X</span>
@@ -351,7 +372,7 @@ export default function RadioDreamsClient({initialFeed}:{initialFeed:Feed}){
     </section>
 
     <section className="equalizerWrap">
-      <div className="leaderNote">{played} В ЭФИРЕ · <b>{leader.icon} {leader.label}</b></div>
+      <div className="leaderNote">{played} В ЭФИРЕ · <b><ClusterIcon id={leader.id} size={14}/> {leader.label}</b></div>
       <div className="dreamEqualizer">
         {CLUSTERS.map(cluster=>{
           const value=counts[cluster.id]||0;
@@ -371,7 +392,7 @@ export default function RadioDreamsClient({initialFeed}:{initialFeed:Feed}){
                 />
               })}
             </div>
-            <div className="eqIcon" style={{color:`hsl(${cluster.hue} 100% 70%)`}}>{cluster.icon}</div>
+            <div className="eqIcon" style={{color:`hsl(${cluster.hue} 100% 70%)`}}><ClusterIcon id={cluster.id} size={20}/></div>
             <div className="eqLabel">{cluster.label}</div>
             <div className="eqCount">{value}</div>
           </div>;
