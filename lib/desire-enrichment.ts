@@ -50,6 +50,11 @@ const deepDesirePatterns: Array<[RegExp, DeepDesire]> = [
 ];
 
 function expressionType(text: string): ExpressionType {
+  const withoutQuotedSpeech = text
+    .replace(/«[^»]*»/gu, " ")
+    .replace(/“[^”]*”/gu, " ")
+    .replace(/„[^“]*“/gu, " ")
+    .replace(/"[^"]*"/gu, " ");
   if (/^rt\s*@/iu.test(text)) return "legacy_retweet";
   if (/(?:new blog post|read more|click here|learn more|startupstory|newsletter|article|blog post|новый пост|читать далее|подробнее|ссылка в|реклама)/iu.test(text)) return "advertisement";
   if (/(?:his dream|her dream|their dream|your dream|someone'?s dream|trump'?s dream|мечта (?:его|ее|её|их|трампа)|его мечт|ее мечт|её мечт|их мечт)/iu.test(text)) return "third_person";
@@ -64,7 +69,7 @@ function expressionType(text: string): ExpressionType {
     /(?:please|kindly|help me|support me|support my|donat(?:e|ing)|campaign|fund my|requesting for help|i am writing to you|dear (?:mr\.?|sir)|hello (?:mr\.?|sir)|@elonmusk|@elonmuskaoc|@elonmuskpd)/iu.test(text) ||
     /(?:помогите|прошу помочь|поддержите|сбор средств|донат|кампания|обращаюсь к|уважаемый)/iu.test(text)
   ) return "other";
-  if (/мечт|dream|wish|hope|хочу|хотелось/iu.test(text)) return "aspiration";
+  if (/мечт|dream|wish|hope|хочу|хотелось/iu.test(withoutQuotedSpeech)) return "aspiration";
   return "other";
 }
 
@@ -100,12 +105,28 @@ function inferDeepDesire(text: string): DeepDesire {
 }
 
 function hasExplicitFirstPersonAspiration(text: string) {
-  const t = text.toLowerCase();
+  // Strict mode: only the author's own unquoted first-person statement counts.
+  const unquoted = text
+    .replace(/«[^»]*»/gu, " ")
+    .replace(/“[^”]*”/gu, " ")
+    .replace(/„[^“]*“/gu, " ")
+    .replace(/"[^"]*"/gu, " ")
+    .replace(/'[^']*'/gu, " ")
+    .replace(/https?:\/\/\S+/giu, " ")
+    .replace(/@[A-Za-z0-9_]+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim()
+    .toLowerCase();
 
-  const ru = /(?:^|[.!?]\s*|\s)(?:я\s+(?:мечтаю|хочу|надеюсь|желаю)|мне\s+(?:хочется|бы\s+хотелось)|моя\s+мечта\s*[-—:]?|моей\s+мечтой\s+(?:является|было|будет))/iu;
-  const en = /(?:^|[.!?]\s*|\s)(?:i\s+(?:dream|want|wish|hope|long|would\s+love)|my\s+dream\s+(?:is|was|would\s+be|has\s+always\s+been)|i(?:'ve|\s+have)\s+always\s+dreamed\s+of)/iu;
+  // Reject clear narration / reported speech around a supposed dream statement.
+  if (/(?:сказал|сказала|говорит|говорил|говорила|рассказал|рассказала|ответил|ответила|подумал|подумала|такой|такая|он такой|она такая|he said|she said|they said|told me|was like|goes like)/iu.test(unquoted)) {
+    return false;
+  }
 
-  return ru.test(t) || en.test(t);
+  const ru = /(?:^|[.!?]\s*)(?:я\s+(?:мечтаю|хочу|надеюсь|желаю)|мне\s+(?:хочется|бы\s+хотелось)|моя\s+мечта\s*[-—:]?|моей\s+мечтой\s+(?:является|было|будет))/iu;
+  const en = /(?:^|[.!?]\s*)(?:i\s+(?:dream|want|wish|hope|long|would\s+love)|my\s+dream\s+(?:is|was|would\s+be|has\s+always\s+been)|i(?:'ve|\s+have)\s+always\s+dreamed\s+of)/iu;
+
+  return ru.test(unquoted) || en.test(unquoted);
 }
 
 export function enrichDesireText(text: string) {
