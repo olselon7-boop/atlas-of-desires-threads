@@ -36,7 +36,7 @@ export type DeepDesire =
 const deepDesirePatterns: Array<[RegExp, DeepDesire]> = [
   [/(?:секс|интим|эрот|проституц|sexual|intimacy|erotic|prostitut|penis|dick|cock|vagina|pussy|genitals?|scrotum|testicles?|balls?|groin|мошонк|яичк|генитал|член|пенис|влагалищ|big penis|large penis|sex with|sleep with|hook up)/iu, "sex_intimacy"],
   [/(?:\$\s*\d|\d+(?:[.,]\d+)?\s*(?:доллар|рубл|евро|pound|usd|eur)|цена|стоимост|деньг|богат|доход|финанс|зарплат|бюджет|машин|автомобил|купить|покуп|бензин|топлив|галлон|литр|price|cost|money|rich|wealth|financial|income|salary|budget|buy|buying|gas(?:oline)?|fuel|gallon)/iu, "money_material_security"],
-  [/(любов|любим|отношен|партнер|партнёр|парень|девуш|свадьб|marry|marriage|love|loved|beloved|relationship|partner|boyfriend|girlfriend|husband|wife)/iu, "love_relationships"],
+  [/(любов|любим|мечтаю\s+о\s+тебе|отношен|партнер|партнёр|парень|девуш|свадьб|marry|marriage|love|loved|beloved|dream(?:ing)?\s+of\s+you|relationship|partner|boyfriend|girlfriend|husband|wife)/iu, "love_relationships"],
   [/(дом|квартир|жиль|сво[йя]\s+(?:дом|квартир)|home|house|apartment|housing|own place)/iu, "home_belonging"],
   [/(поех|путешеств|переех|эмигр|релокац|море|стран|travel|trip|visit|move to|moving|emigrat|relocat|world tour)/iu, "travel_exploration"],
   [/(работ|карьер|профес|бизнес|стартап|предприним|job|career|business|startup|profession|become|photographer|singer|actor|actress)/iu, "career_self_realization"],
