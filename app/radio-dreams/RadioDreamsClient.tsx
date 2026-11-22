@@ -228,6 +228,7 @@ export default function RadioDreamsClient({initialFeed}:{initialFeed:Feed}){
   const seenTextRef=useRef<Set<string>>(new Set(initialCorpus.map(d=>dedupeKey(d.text)).filter(Boolean)));
   const seenSamplesRef=useRef<string[]>(initialCorpus.map(d=>d.text));
   const cursorsRef=useRef<{ru:string|null;en:string|null}>({ru:null,en:null});
+  const hydratedRef=useRef(false);
   const config=useMemo(()=>new Map(CLUSTERS.map(c=>[c.id,c])),[]);
 
   function playClusterSound(cluster:Cluster){
@@ -327,7 +328,17 @@ export default function RadioDreamsClient({initialFeed}:{initialFeed:Feed}){
         .sort((a,b)=>String(a.created_at).localeCompare(String(b.created_at)));
 
       if(!fresh.length) return;
-      queueRef.current.push(...fresh);
+
+      if(!hydratedRef.current){
+        // Initial daily backlog: play chronologically.
+        queueRef.current.push(...fresh);
+        hydratedRef.current=true;
+      }else{
+        // True live arrivals should be heard next, not after the whole backlog.
+        const newestFirst=[...fresh].sort((a,b)=>String(b.created_at).localeCompare(String(a.created_at)));
+        queueRef.current.unshift(...newestFirst);
+      }
+
       setQueueSize(queueRef.current.length);
       setLiveSeen(v=>v+fresh.length);
       playNext();
