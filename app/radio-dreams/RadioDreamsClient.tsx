@@ -111,6 +111,11 @@ function ClusterIcon({id,size=24}:{id:Cluster;size?:number}){
     [intimateClusterId]:<>
       <circle {...line} cx="9" cy="12" r="4.5"/><circle {...line} cx="15" cy="12" r="4.5"/>
       <path {...line} d="M12 6v12"/>{dot(12,12,1)}
+    </>,
+    other:<>
+      <circle {...line} cx="12" cy="12" r="6.5"/>
+      {dot(8,12,1.1)}{dot(12,8,1.1)}{dot(16,12,1.1)}{dot(12,16,1.1)}
+      <path {...line} d="M8 12h8M12 8v8"/>
     </>
   };
   return <svg className="clusterGlyph" width={size} height={size} viewBox="0 0 24 24" aria-hidden="true">{glyphs[id]||glyphs.experience_pleasure}</svg>;
@@ -137,6 +142,7 @@ const CLUSTERS: Array<{
   { id:"community_justice", label:"МИР", hue:110, freq:220.00, wave:"sine" },
   { id:"experience_pleasure", label:"ВПЕЧАТЛЕНИЯ", hue:310, freq:783.99, wave:"sine" },
   { id:intimateClusterId, label:intimateClusterLabel, hue:352, freq:246.94, wave:"sawtooth" },
+  { id:"other", label:"ДРУГОЕ", hue:210, freq:311.13, wave:"triangle" },
 ];
 
 function cleanText(text:string){
