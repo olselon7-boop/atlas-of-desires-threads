@@ -34,21 +34,21 @@ export type DeepDesire =
   | "unknown";
 
 const deepDesirePatterns: Array<[RegExp, DeepDesire]> = [
-  [/(?:секс|интим|эрот|проституц|sexual|intimacy|erotic|prostitut|penis|dick|cock|vagina|pussy|genitals?|scrotum|testicles?|balls?|groin|мошонк|яичк|генитал|член|пенис|влагалищ|big penis|large penis|sex with|sleep with|hook up)/iu, "sex_intimacy"],
+  [/(?:секс|интим|эрот|проституц|sexual|intimacy|erotic|prostitut|penis|dick|cock|vagina|pussy|genitals?|scrotum|testicles?|balls?|groin|мошонк|яичк|генитал|член|пенис|влагалищ|выеб|трах|отсос|big penis|large penis|sex with|sleep with|hook up|getting head|give me head|oral sex)/iu, "sex_intimacy"],
   [/(?:\$\s*\d|\d+(?:[.,]\d+)?\s*(?:доллар|рубл|евро|pound|usd|eur)|цена|стоимост|деньг|богат|доход|финанс|зарплат|бюджет|машин|автомобил|купить|покуп|бензин|топлив|галлон|литр|price|cost|money|rich|wealth|financial|income|salary|budget|buy|buying|gas(?:oline)?|fuel|gallon)/iu, "money_material_security"],
-  [/(любов|любим|мечтаю\s+о\s+тебе|отношен|партнер|партнёр|парень|девуш|свадьб|marry|marriage|love|loved|beloved|dream(?:ing)?\s+of\s+you|relationship|partner|boyfriend|girlfriend|husband|wife)/iu, "love_relationships"],
+  [/(?:любов|любим|отношен|партнер|партнёр|парень|девуш|свадьб|мечтаю\s+о\s+(?:тебе|н[её]м|ней|ком[-\s]?то|человеке|парне|девушке|мужчине|женщине)|marry|marriage|love|loved|beloved|relationship|partner|boyfriend|girlfriend|husband|wife|dream(?:ing)?\s+(?:of|about)\s+(?:you|him|her|someone|somebody|a\s+partner))/iu, "love_relationships"],
   [/(дом|квартир|жиль|сво[йя]\s+(?:дом|квартир)|home|house|apartment|housing|own place)/iu, "home_belonging"],
-  [/(поех|путешеств|переех|эмигр|релокац|море|стран|travel|trip|visit|move to|moving|emigrat|relocat|world tour)/iu, "travel_exploration"],
+  [/(поех|путешеств|переех|эмигр|релокац|море|стран|марс|travel|trip|visit|move to|moving|emigrat|relocat|world tour|mars)/iu, "travel_exploration"],
   [/(работ|карьер|профес|бизнес|стартап|предприним|job|career|business|startup|profession|become|photographer|singer|actor|actress)/iu, "career_self_realization"],
   [/(свобод|независ|увол|уйти с работ|freedom|independen|quit|escape)/iu, "freedom_independence"],
-  [/(рисов|музык|книг|писат|твор|искусств|играть на|music|write|book|art|creative|paint|piano|guitar)/iu, "creativity_expression"],
+  [/(рисов|музык|книг|писат|твор|искусств|фанфик|играть на|music|write|book|art|creative|paint|piano|guitar|fanfic|fan fiction)/iu, "creativity_expression"],
   [/(учить|учиться|образован|университет|экзамен|язык|learn|study|education|university|college|exam|language)/iu, "education_growth"],
   [/(семь|ребен|ребён|детей|родител|family|children|child|kids|parent)/iu, "family_children"],
   [/(счастлив|счастье|happy|happiness)/iu, "happiness"],
   [/(здоров|тел[оа]|волос|похуд|менталь|wellbeing|well-being|health|body|hair|mental health)/iu, "health_wellbeing"],
   [/(извест|признан|успех|слава|кумир|recognition|famous|success|meet .*idol|award)/iu, "recognition_status"],
   [/(мир|справедлив|войн|общество|права|justice|peace|society|community|rights|election)/iu, "community_justice"],
-  [/(концерт|фестиваль|снег|вечерин|удовольств|concert|festival|party|snow|experience)/iu, "experience_pleasure"],
+  [/(концерт|фестиваль|снег|вечерин|удовольств|поиграт|поиграть|игра(?:ть)?|гта\s*6|коктейл|concert|festival|party|snow|experience|gaming|game\b|play\b|gta\s*6|cocktail|candy)/iu, "experience_pleasure"],
 ];
 
 function expressionType(text: string): ExpressionType {
@@ -58,11 +58,12 @@ function expressionType(text: string): ExpressionType {
     .replace(/„[^“]*“/gu, " ")
     .replace(/"[^"]*"/gu, " ");
   if (/^rt\s*@/iu.test(text)) return "legacy_retweet";
+  if (/\bi\s+dream\s+of\s+jeannie\b/iu.test(text)) return "other";
   if (/(?:new blog post|read more|click here|learn more|startupstory|newsletter|article|blog post|новый пост|читать далее|подробнее|ссылка в|реклама)/iu.test(text)) return "advertisement";
   if (/(?:his dream|her dream|their dream|your dream|someone'?s dream|trump'?s dream|мечта (?:его|ее|её|их|трампа)|его мечт|ее мечт|её мечт|их мечт)/iu.test(text)) return "third_person";
   if (/(?:career you have always dreamed of|job you have always dreamed of|life you have always dreamed of|the .* you have always dreamed of)/iu.test(text)) return "other";
   if (/(?:\bты\s+(?:жив[её]шь|живешь)\s+(?:своей|свою)\s+мечт|\bживи\s+(?:своей|свою)\s+мечт|\bвы\s+(?:жив[её]те|живете)\s+(?:своей|свою)\s+мечт|\byou(?:'re| are)\s+living\s+your\s+dream|\blive\s+your\s+dream|\byou\s+live\s+your\s+dream)/iu.test(text)) return "other";
-  if (/(?:dreamt|dreamed|dreaming) last night|(?:in|from) my dream|i (?:keep )?dream(?:ed|t|ing)? about|i dream about him|i dream about her|while i sleep|when i sleep|sleep to .*dream|dream every night|nightmare|daymare|мне приснил|сон приснил|приснилось|снилось|мне снится|мне снился|мне снилась|вижу во сне|сон про|сны про|сны о/iu.test(text)) return "sleep_dream";
+  if (/(?:dreamt|dreamed|dreaming) last night|(?:in|from) my dream|while i sleep|when i sleep|sleep to .*dream|dream every night|nightmare|daymare|мне приснил|сон приснил|приснилось|снилось|мне снится|мне снился|мне снилась|вижу во сне|сон про|сны про|сны о/iu.test(text)) return "sleep_dream";
   if (/(?:lyrics?|quote)|цитат|стих|текст песни|song lyrics/iu.test(text)) return "quote_lyrics";
   if (/(?:sponsored|sale|discount|coupon|giveaway|offer)|скидк|промокод|реклам/iu.test(text)) return "advertisement";
   if (/(?:breaking|reports?|according to|news)|новост|сообщает|по данным/iu.test(text)) return "news";
@@ -136,10 +137,11 @@ export function enrichDesireText(text: string) {
   const type = expressionType(text);
   const subject = aspirationSubject(text);
   const firstPerson = subject === "self" && hasExplicitFirstPersonAspiration(text);
+  const relationalObject = /(?:я\s+мечтаю\s+о\s+(?:тебе|н[её]м|ней|ком[-\s]?то|человеке|парне|девушке|мужчине|женщине)|i\s+dream\s+(?:of|about)\s+(?:you|him|her|someone|somebody|a\s+partner))/iu.test(text);
   const isHumanAspiration =
     type === "aspiration" &&
     firstPerson &&
-    !/(?:\byou\b|\byour\b|\bhe\b|\bshe\b|\bthey\b|\bhis\b|\bher\b|\btheir\b|\bты\b|\bтебя\b|\bтвой\b|\bвы\b|\bваш\b|\bон\b|\bона\b|\bони\b|\bего\b|\bеё\b|\bих\b)/iu.test(text.replace(/^(?:i|я)\b.{0,24}/iu,"")) &&
+    (relationalObject || !/(?:\byou\b|\byour\b|\bhe\b|\bshe\b|\bthey\b|\bhis\b|\bher\b|\btheir\b|\bты\b|\bтебя\b|\bтвой\b|\bвы\b|\bваш\b|\bон\b|\bона\b|\bони\b|\bего\b|\bеё\b|\bих\b)/iu.test(text.replace(/^(?:i|я)\b.{0,24}/iu,""))) &&
     !/(?:sleep|asleep|nightmare|daymare|every night|while i sleep|when i sleep|во сне|приснил|приснилось|снилось|мне снится|сон про|сны про|сны о)/iu.test(text) &&
     !/(?:\bты\s+(?:жив[её]шь|живешь)\s+(?:своей|свою)\s+мечт|\bживи\s+(?:своей|свою)\s+мечт|\bвы\s+(?:жив[её]те|живете)\s+(?:своей|свою)\s+мечт|\byou(?:'re| are)\s+living\s+your\s+dream|\blive\s+your\s+dream|\byou\s+live\s+your\s+dream)/iu.test(text) &&
     !/^rt\s*@/iu.test(text);
