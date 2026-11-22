@@ -237,6 +237,7 @@ export default function RadioDreamsClient({initialFeed}:{initialFeed:Feed}){
   const seenSamplesRef=useRef<string[]>(initialCorpus.map(d=>d.text));
   const cursorsRef=useRef<{ru:string|null;en:string|null}>({ru:null,en:null});
   const hydratedRef=useRef(false);
+  const dailyLoadedRef=useRef(false);
   const config=useMemo(()=>new Map(CLUSTERS.map(c=>[c.id,c])),[]);
 
   function playClusterSound(cluster:Cluster){
@@ -356,6 +357,19 @@ export default function RadioDreamsClient({initialFeed}:{initialFeed:Feed}){
 
     const poll=async()=>{
       try{
+        if(!dailyLoadedRef.current){
+          const dailyResponse=await fetch("/api/radio-dreams/daily",{cache:"no-store"});
+          if(dailyResponse.ok){
+            const daily=await dailyResponse.json();
+            cursorsRef.current={
+              ru:daily.cursors?.ru||null,
+              en:daily.cursors?.en||null
+            };
+            addDreams(Array.isArray(daily.posts)?daily.posts:[]);
+          }
+          dailyLoadedRef.current=true;
+        }
+
         const q=new URLSearchParams();
         if(cursorsRef.current.ru) q.set("since_ru",cursorsRef.current.ru);
         if(cursorsRef.current.en) q.set("since_en",cursorsRef.current.en);
