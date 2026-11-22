@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { RADIO_TUNE_SRC } from "./radioTune";
+import P5Infographic from "./P5Infographic";
 
 type Cluster = string;
 
@@ -423,26 +424,20 @@ export default function RadioDreamsClient({initialFeed}:{initialFeed:Feed}){
 
     <section className="equalizerWrap">
       <div className="leaderNote">{played} В ЭФИРЕ · <b><ClusterIcon id={leader.id} size={14}/> {leader.label}</b></div>
-      <div className="dreamEqualizer">
+      <P5Infographic
+        clusters={CLUSTERS.map(({id,label,hue})=>({id,label,hue}))}
+        counts={counts}
+        activeCluster={activeCluster}
+        pulseTick={dropTick}
+      />
+      <div className="equalizerLegend">
         {CLUSTERS.map(cluster=>{
           const value=counts[cluster.id]||0;
-          const isLeader=cluster.id===leader.id;
           const isActive=activeCluster===cluster.id;
-          return <div className={"eqChannel"+(isLeader?" leader":"")+(isActive?" receiving":"")} key={isActive ? cluster.id+"-"+dropTick : cluster.id}>
-            <div className="eqStack" title={cluster.label+" — "+value}>
-              {Array.from({length:Math.max(1,value)},(_,i)=>{
-                const newest=i===value-1;
-                return <span
-                  key={i}
-                  className={"on"+(newest && isActive?" newest":"")}
-                  style={{
-                    background:`hsl(${cluster.hue} 100% ${58+Math.min(i,8)*1.3}%)`,
-                    boxShadow:`0 0 10px hsl(${cluster.hue} 100% 58% / .5)`
-                  }}
-                />
-              })}
+          return <div className={"eqLegendItem"+(isActive?" active":"")} key={cluster.id}>
+            <div className="eqIcon" style={{color:`hsl(${cluster.hue} 100% 70%)`}}>
+              <ClusterIcon id={cluster.id} size={19}/>
             </div>
-            <div className="eqIcon" style={{color:`hsl(${cluster.hue} 100% 70%)`}}><ClusterIcon id={cluster.id} size={20}/></div>
             <div className="eqLabel">{cluster.label}</div>
             <div className="eqCount">{value}</div>
           </div>;
