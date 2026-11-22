@@ -84,6 +84,12 @@ function ClusterIcon({id,size=24}:{id:Cluster;size?:number}){
       <path {...line} d="M12 7v10M7 12h10"/>
       <path {...line} d="M4.5 6.5h3M16.5 17.5h3"/>
     </>,
+    happiness:<>
+      <circle {...line} cx="12" cy="12" r="6.5"/>
+      <path {...line} d="M8.5 13.5c1.3 2 5.7 2 7 0"/>
+      {dot(9.5,10,0.8)}{dot(14.5,10,0.8)}
+      <path {...line} d="M12 3v2M12 19v2M3 12h2M19 12h2"/>
+    </>,
     education_growth:<>
       <path {...line} d="M5 17h14M7 14h10M9 11h6M11 8h2"/>
       {dot(12,5,1.2)}
@@ -136,6 +142,7 @@ const CLUSTERS: Array<{
   { id:"family_children", label:"СЕМЬЯ", hue:6, freq:349.23, wave:"sine" },
   { id:"creativity_expression", label:"ТВОРЧЕСТВО", hue:286, freq:587.33, wave:"triangle" },
   { id:"health_wellbeing", label:"ЗДОРОВЬЕ", hue:164, freq:293.66, wave:"sine" },
+  { id:"happiness", label:"СЧАСТЬЕ", hue:52, freq:554.37, wave:"sine" },
   { id:"education_growth", label:"ОБРАЗОВАНИЕ", hue:205, freq:659.25, wave:"triangle" },
   { id:"freedom_independence", label:"СВОБОДА", hue:248, freq:493.88, wave:"sine" },
   { id:"recognition_status", label:"ПРИЗНАНИЕ", hue:42, freq:698.46, wave:"triangle" },
