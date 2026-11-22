@@ -44,13 +44,39 @@ const QUERIES = [
   }
 ] as const;
 
+function startOfTodayAmsterdamIso() {
+  const now = new Date();
+  const dateParts = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Europe/Amsterdam",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit"
+  }).formatToParts(now);
+  const year = Number(dateParts.find(p=>p.type==="year")?.value || now.getUTCFullYear());
+  const month = Number(dateParts.find(p=>p.type==="month")?.value || now.getUTCMonth()+1);
+  const day = Number(dateParts.find(p=>p.type==="day")?.value || now.getUTCDate());
+
+  const offsetName = new Intl.DateTimeFormat("en-US", {
+    timeZone: "Europe/Amsterdam",
+    timeZoneName: "shortOffset",
+    hour: "2-digit"
+  }).formatToParts(new Date(Date.UTC(year,month-1,day,12)))
+    .find(p=>p.type==="timeZoneName")?.value || "GMT+1";
+  const match = offsetName.match(/GMT([+-])(\d{1,2})(?::(\d{2}))?/);
+  const sign = match?.[1] === "-" ? -1 : 1;
+  const hours = Number(match?.[2] || 0);
+  const minutes = Number(match?.[3] || 0);
+  const offsetMs = sign * (hours*60 + minutes) * 60_000;
+
+  return new Date(Date.UTC(year,month-1,day,0,0,0) - offsetMs).toISOString();
+}
+
 async function search(token: string, query: string, sinceId?: string | null) {
-  const url = buildXSearchUrl({ mode: "recent", query, maxResults: 10 });
+  const url = buildXSearchUrl({ mode: "recent", query, maxResults: sinceId ? 10 : 100 });
   if (sinceId) {
     url.searchParams.set("since_id", sinceId);
   } else {
-    const start = new Date(Date.now() - 15 * 60 * 1000);
-    url.searchParams.set("start_time", start.toISOString());
+    url.searchParams.set("start_time", startOfTodayAmsterdamIso());
   }
   const response = await fetch(url, {
     headers: {
