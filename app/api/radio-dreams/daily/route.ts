@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { loadRadioDreamsToday } from "@/lib/x-persistence";
+import { getRadioDreamCursors, loadRadioDreamsToday } from "@/lib/x-persistence";
 import { startOfTodayAmsterdamIso } from "@/lib/radio-dreams-source";
 
 export const runtime="nodejs";
@@ -8,7 +8,10 @@ export const dynamic="force-dynamic";
 export async function GET(){
   try{
     const start=startOfTodayAmsterdamIso();
-    const posts=await loadRadioDreamsToday(start);
+    const [posts,cursors]=await Promise.all([
+      loadRadioDreamsToday(start),
+      getRadioDreamCursors()
+    ]);
     const clusterCounts:Record<string,number>={};
     for(const post of posts){
       const cluster=String(post.cluster||"other");
@@ -21,7 +24,8 @@ export async function GET(){
       fetched_at:new Date().toISOString(),
       total:posts.length,
       posts,
-      cluster_counts:clusterCounts
+      cluster_counts:clusterCounts,
+      cursors
     },{
       headers:{
         "Cache-Control":"no-store, max-age=0",
