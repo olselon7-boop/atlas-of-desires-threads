@@ -25,6 +25,7 @@ export type DeepDesire =
   | "education_growth"
   | "family_children"
   | "health_wellbeing"
+  | "happiness"
   | "recognition_status"
   | "community_justice"
   | "experience_pleasure"
@@ -43,7 +44,8 @@ const deepDesirePatterns: Array<[RegExp, DeepDesire]> = [
   [/(рисов|музык|книг|писат|твор|искусств|играть на|music|write|book|art|creative|paint|piano|guitar)/iu, "creativity_expression"],
   [/(учить|учиться|образован|университет|экзамен|язык|learn|study|education|university|college|exam|language)/iu, "education_growth"],
   [/(семь|ребен|ребён|детей|родител|family|children|child|kids|parent)/iu, "family_children"],
-  [/(здоров|тел[оа]|волос|похуд|менталь|счастлив|счастье|wellbeing|well-being|health|body|hair|mental health|happy|happiness)/iu, "health_wellbeing"],
+  [/(счастлив|счастье|happy|happiness)/iu, "happiness"],
+  [/(здоров|тел[оа]|волос|похуд|менталь|wellbeing|well-being|health|body|hair|mental health)/iu, "health_wellbeing"],
   [/(извест|признан|успех|слава|кумир|recognition|famous|success|meet .*idol|award)/iu, "recognition_status"],
   [/(мир|справедлив|войн|общество|права|justice|peace|society|community|rights|election)/iu, "community_justice"],
   [/(концерт|фестиваль|снег|вечерин|удовольств|concert|festival|party|snow|experience)/iu, "experience_pleasure"],
