@@ -67,7 +67,6 @@ function ClusterIcon({id,size=20}:{id:Cluster;size?:number}){
 const CLUSTERS: Array<{
   id: Cluster;
   label: string;
-  icon: string;
   hue: number;
   freq: number;
   wave: OscillatorType;
