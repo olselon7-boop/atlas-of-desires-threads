@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getRadioDreamCursors, loadRadioDreamsToday } from "@/lib/x-persistence";
 import { startOfTodayAmsterdamIso } from "@/lib/radio-dreams-source";
+import { toRadioDreamCluster } from "@/lib/radio-dream-clusters";
 
 export const runtime="nodejs";
 export const dynamic="force-dynamic";
@@ -12,9 +13,21 @@ export async function GET(){
       loadRadioDreamsToday(start),
       getRadioDreamCursors()
     ]);
+    const radioPosts=posts
+      .map((post:any)=>{
+        const cluster=toRadioDreamCluster(post.cluster);
+        if(!cluster) return null;
+        return {
+          ...post,
+          source_cluster:post.cluster,
+          cluster
+        };
+      })
+      .filter(Boolean);
+
     const clusterCounts:Record<string,number>={};
-    for(const post of posts){
-      const cluster=String(post.cluster||"other");
+    for(const post of radioPosts){
+      const cluster=String((post as any).cluster);
       clusterCounts[cluster]=(clusterCounts[cluster]||0)+1;
     }
     return NextResponse.json({
@@ -22,8 +35,9 @@ export async function GET(){
       timezone:"Europe/Amsterdam",
       start,
       fetched_at:new Date().toISOString(),
-      total:posts.length,
-      posts,
+      total:radioPosts.length,
+      review_total:posts.length-radioPosts.length,
+      posts:radioPosts,
       cluster_counts:clusterCounts,
       cursors
     },{
