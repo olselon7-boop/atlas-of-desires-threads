@@ -10,6 +10,7 @@ import {
   persistXSearchResponse,
   saveRadioDreamCursors
 } from "@/lib/x-persistence";
+import { toRadioDreamCluster } from "@/lib/radio-dream-clusters";
 
 export const runtime="nodejs";
 export const dynamic="force-dynamic";
@@ -80,7 +81,8 @@ export async function GET(req:NextRequest){
           text:post.text,
           created_at:post.created_at||null,
           language:post.lang||post.source_language,
-          cluster:e.deep_desire as DeepDesire,
+          source_cluster:e.deep_desire as DeepDesire,
+          cluster:toRadioDreamCluster(e.deep_desire),
           state:e.lifecycle_state,
           agency:e.agency,
           confidence:e.confidence,
@@ -110,7 +112,7 @@ export async function GET(req:NextRequest){
           })()
         };
       })
-      .filter(p=>p.is_human_aspiration)
+      .filter(p=>p.is_human_aspiration && p.cluster)
       .sort((a,b)=>String(b.created_at).localeCompare(String(a.created_at)));
 
     const cursors={
