@@ -46,8 +46,8 @@ const deepDesirePatterns: Array<[RegExp, DeepDesire]> = [
   [/(семь|ребен|ребён|детей|родител|family|children|child|kids|parent)/iu, "family_children"],
   [/(счастлив|счастье|happy|happiness)/iu, "happiness"],
   [/(здоров|тел[оа]|волос|похуд|менталь|wellbeing|well-being|health|body|hair|mental health)/iu, "health_wellbeing"],
-  [/(извест|признан|успех|слава|кумир|recognition|famous|success|meet .*idol|award)/iu, "recognition_status"],
-  [/(мир|справедлив|войн|общество|права|justice|peace|society|community|rights|election)/iu, "community_justice"],
+  [/(извест|признан|успех|слава|кумир|подиум|recognition|famous|success|meet .*idol|award|podium)/iu, "recognition_status"],
+  [/(мир|справедлив|войн|общество|права|полици|мэр|правительств|justice|peace|society|community|rights|election|police|city hall|government)/iu, "community_justice"],
   [/(концерт|фестиваль|снег|вечерин|удовольств|поиграт|поиграть|игра(?:ть)?|гта\s*6|коктейл|concert|festival|party|snow|experience|gaming|game\b|play\b|gta\s*6|cocktail|candy)/iu, "experience_pleasure"],
 ];
 
