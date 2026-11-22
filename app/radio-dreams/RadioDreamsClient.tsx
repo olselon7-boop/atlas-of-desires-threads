@@ -346,7 +346,7 @@ export default function RadioDreamsClient({initialFeed}:{initialFeed:Feed}){
           const value=counts[cluster.id]||0;
           const isLeader=cluster.id===leader.id;
           const isActive=activeCluster===cluster.id;
-          return <div className={"eqChannel"+(isLeader?" leader":"")+(isActive?" receiving":"")} key={cluster.id}>
+          return <div className={"eqChannel"+(isLeader?" leader":"")+(isActive?" receiving":"")} key={isActive ? cluster.id+"-"+dropTick : cluster.id}>
             <div className="eqStack" title={cluster.label+" — "+value}>
               {Array.from({length:Math.max(1,value)},(_,i)=>{
                 const newest=i===value-1;
