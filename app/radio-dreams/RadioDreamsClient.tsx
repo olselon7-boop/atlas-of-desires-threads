@@ -428,7 +428,7 @@ export default function RadioDreamsClient({initialFeed}:{initialFeed:Feed}){
             : <img src={currentMedia.url || currentMedia.preview_url || ""} alt={currentMedia.alt_text || ""} />}
         </div>}
         <div className="radioMessageText">
-          <div className="radioClusterTag"><ClusterIcon id={current.cluster} size={15}/> {currentCfg?.label}</div>
+          <div className="radioClusterTag"><ClusterIcon id={current.cluster} size={15}/> КАТЕГОРИЯ · {currentCfg?.label}</div>
           <p>{cleanText(current.text)}</p>
           <div className="radioMessageMeta">
             <span>{formatTime(current.created_at)} · X</span>
@@ -440,7 +440,7 @@ export default function RadioDreamsClient({initialFeed}:{initialFeed:Feed}){
     </section>
 
     <section className="equalizerWrap">
-      <div className="leaderNote">{played} В ЭФИРЕ · <b><ClusterIcon id={leader.id} size={14}/> {leader.label}</b></div>
+      <div className="leaderNote">ПОКАЗАНО С МОМЕНТА ОТКРЫТИЯ: {played} · ЛИДЕР ПО ПОКАЗАННЫМ: <b><ClusterIcon id={leader.id} size={14}/> {leader.label}</b></div>
       <P5Infographic
         clusters={CLUSTERS.map(({id,label,hue})=>({id,label,hue}))}
         counts={counts}
