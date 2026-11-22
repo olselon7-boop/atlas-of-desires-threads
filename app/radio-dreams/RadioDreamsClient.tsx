@@ -191,9 +191,9 @@ function formatTime(value:string|null){
 
 function readingDurationMs(text:string){
   const words=cleanText(text).split(/\s+/).filter(Boolean).length;
-  const wordsPerMinute=150;
+  const wordsPerMinute=220;
   const estimated=(words/wordsPerMinute)*60_000;
-  return Math.max(5_000,Math.min(18_000,estimated+1_800));
+  return Math.max(3_200,Math.min(8_000,estimated+900));
 }
 
 export default function RadioDreamsClient({initialFeed}:{initialFeed:Feed}){
@@ -430,19 +430,6 @@ export default function RadioDreamsClient({initialFeed}:{initialFeed:Feed}){
         activeCluster={activeCluster}
         pulseTick={dropTick}
       />
-      <div className="equalizerLegend">
-        {CLUSTERS.map(cluster=>{
-          const value=counts[cluster.id]||0;
-          const isActive=activeCluster===cluster.id;
-          return <div className={"eqLegendItem"+(isActive?" active":"")} key={cluster.id}>
-            <div className="eqIcon" style={{color:`hsl(${cluster.hue} 100% 70%)`}}>
-              <ClusterIcon id={cluster.id} size={19}/>
-            </div>
-            <div className="eqLabel">{cluster.label}</div>
-            <div className="eqCount">{value}</div>
-          </div>;
-        })}
-      </div>
     </section>
 
     <footer className="radioFooter">
