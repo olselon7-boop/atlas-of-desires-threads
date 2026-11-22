@@ -30,7 +30,7 @@ type XResponse = {
       variants?: Array<{ bit_rate?: number; content_type?: string; url?: string }>;
     }>;
   };
-  meta?: { newest_id?: string; oldest_id?: string; result_count?: number };
+  meta?: { newest_id?: string; oldest_id?: string; result_count?: number; next_token?: string };
   title?: string;
   detail?: string;
 };
@@ -75,13 +75,20 @@ function startOfTodayAmsterdamIso() {
   return new Date(Date.UTC(year,month-1,day,0,0,0) - offsetMs).toISOString();
 }
 
-async function search(token: string, query: string, sinceId?: string | null) {
-  const url = buildXSearchUrl({ mode: "recent", query, maxResults: sinceId ? 10 : 100 });
-  if (sinceId) {
-    url.searchParams.set("since_id", sinceId);
+async function searchPage(token: string, query: string, options?: {
+  sinceId?: string | null;
+  paginationToken?: string | null;
+}) {
+  const url = buildXSearchUrl({ mode: "recent", query, maxResults: 100 });
+  if (options?.sinceId) {
+    url.searchParams.set("since_id", options.sinceId);
   } else {
     url.searchParams.set("start_time", startOfTodayAmsterdamIso());
   }
+  if (options?.paginationToken) {
+    url.searchParams.set("pagination_token", options.paginationToken);
+  }
+
   const response = await fetch(url, {
     headers: {
       Authorization: `Bearer ${token}`,
@@ -95,6 +102,25 @@ async function search(token: string, query: string, sinceId?: string | null) {
   return body;
 }
 
+async function searchAll(token: string, query: string, sinceId?: string | null) {
+  if (sinceId) {
+    return [await searchPage(token, query, { sinceId })];
+  }
+
+  const pages: XResponse[] = [];
+  let paginationToken: string | null = null;
+
+  // Full daily backfill. Safety cap prevents a runaway loop if X returns a bad token.
+  for (let page = 0; page < 50; page++) {
+    const body = await searchPage(token, query, { paginationToken });
+    pages.push(body);
+    paginationToken = body.meta?.next_token || null;
+    if (!paginationToken) break;
+  }
+
+  return pages;
+}
+
 export async function GET(req: NextRequest) {
   const token = process.env.X_BEARER_TOKEN;
   if (!token) return NextResponse.json({ error: "X is not configured" }, { status: 503 });
@@ -104,25 +130,29 @@ export async function GET(req: NextRequest) {
   const sinceEn = params.get("since_en");
 
   try {
-    const [ru, en] = await Promise.all([
-      search(token, QUERIES[0].query, sinceRu),
-      search(token, QUERIES[1].query, sinceEn)
+    const [ruPages, enPages] = await Promise.all([
+      searchAll(token, QUERIES[0].query, sinceRu),
+      searchAll(token, QUERIES[1].query, sinceEn)
     ]);
 
+    const allPages = [...ruPages, ...enPages];
+
     const mediaByKey = new Map(
-      [...(ru.includes?.media || []), ...(en.includes?.media || [])]
+      allPages
+        .flatMap(page => page.includes?.media || [])
         .filter(m => m.media_key)
         .map(m => [m.media_key as string, m])
     );
 
     const referencedById = new Map(
-      [...(ru.includes?.tweets || []), ...(en.includes?.tweets || [])]
+      allPages
+        .flatMap(page => page.includes?.tweets || [])
         .map(t => [t.id, t] as const)
     );
 
     const merged = [
-      ...(ru.data || []).map(p => ({ ...p, source_language: "ru" })),
-      ...(en.data || []).map(p => ({ ...p, source_language: "en" }))
+      ...ruPages.flatMap(page => (page.data || []).map(p => ({ ...p, source_language: "ru" }))),
+      ...enPages.flatMap(page => (page.data || []).map(p => ({ ...p, source_language: "en" })))
     ];
 
     const posts = merged
@@ -175,9 +205,17 @@ export async function GET(req: NextRequest) {
       fetched_at: new Date().toISOString(),
       posts,
       cluster_counts: clusterCounts,
+      stats: {
+        query_matches: merged.length,
+        human_aspirations: posts.length,
+        pages: {
+          ru: ruPages.length,
+          en: enPages.length
+        }
+      },
       cursors: {
-        ru: ru.meta?.newest_id || sinceRu || null,
-        en: en.meta?.newest_id || sinceEn || null
+        ru: ruPages[0]?.meta?.newest_id || sinceRu || null,
+        en: enPages[0]?.meta?.newest_id || sinceEn || null
       }
     }, {
       headers: {
