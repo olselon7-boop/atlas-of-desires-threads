@@ -33,7 +33,7 @@ export type DeepDesire =
   | "unknown";
 
 const deepDesirePatterns: Array<[RegExp, DeepDesire]> = [
-  [/(?:секс|интим|эрот|проституц|sexual|intimacy|erotic|prostitut)/iu, "sex_intimacy"],
+  [/(?:секс|интим|эрот|проституц|sexual|intimacy|erotic|prostitut|penis|dick|cock|vagina|pussy|genitals?|big penis|large penis|sex with|sleep with|hook up)/iu, "sex_intimacy"],
   [/(?:\$\s*\d|\d+(?:[.,]\d+)?\s*(?:доллар|рубл|евро|pound|usd|eur)|цена|стоимост|деньг|богат|доход|финанс|зарплат|бюджет|машин|автомобил|купить|покуп|бензин|топлив|галлон|литр|price|cost|money|rich|wealth|financial|income|salary|budget|buy|buying|gas(?:oline)?|fuel|gallon)/iu, "money_material_security"],
   [/(любов|отношен|партнер|партнёр|парень|девуш|свадьб|marry|marriage|love|relationship|partner|boyfriend|girlfriend|husband|wife)/iu, "love_relationships"],
   [/(дом|квартир|жиль|сво[йя]\s+(?:дом|квартир)|home|house|apartment|housing|own place)/iu, "home_belonging"],
