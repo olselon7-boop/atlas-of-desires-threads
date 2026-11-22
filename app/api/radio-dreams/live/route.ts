@@ -122,7 +122,11 @@ export async function GET(req:NextRequest){
     await saveRadioDreamCursors(cursors);
 
     const clusterCounts:Record<string,number>={};
-    for(const post of posts) clusterCounts[post.cluster]=(clusterCounts[post.cluster]||0)+1;
+    for(const post of posts){
+      const cluster=post.cluster;
+      if(!cluster) continue;
+      clusterCounts[cluster]=(clusterCounts[cluster]||0)+1;
+    }
 
     return NextResponse.json({
       source:"x_recent",
