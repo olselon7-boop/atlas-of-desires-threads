@@ -32,7 +32,7 @@ export function buildXSearchUrl(input: {
   );
   url.searchParams.set("expansions", "author_id,attachments.media_keys,geo.place_id,referenced_tweets.id");
   url.searchParams.set("user.fields", "id,username,name,description,location,created_at,verified");
-  url.searchParams.set("media.fields", "media_key,type,url,preview_image_url,width,height,alt_text");
+  url.searchParams.set("media.fields", "media_key,type,url,preview_image_url,width,height,alt_text,duration_ms,variants");
   url.searchParams.set("place.fields", "id,full_name,country,country_code,geo,name,place_type");
   if (input.nextToken) url.searchParams.set("next_token", input.nextToken);
   if (input.startTime) url.searchParams.set("start_time", input.startTime);
