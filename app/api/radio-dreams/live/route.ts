@@ -46,7 +46,12 @@ const QUERIES = [
 
 async function search(token: string, query: string, sinceId?: string | null) {
   const url = buildXSearchUrl({ mode: "recent", query, maxResults: 10 });
-  if (sinceId) url.searchParams.set("since_id", sinceId);
+  if (sinceId) {
+    url.searchParams.set("since_id", sinceId);
+  } else {
+    const start = new Date(Date.now() - 15 * 60 * 1000);
+    url.searchParams.set("start_time", start.toISOString());
+  }
   const response = await fetch(url, {
     headers: {
       Authorization: `Bearer ${token}`,
