@@ -26,6 +26,8 @@ type XResponse = {
       width?: number;
       height?: number;
       alt_text?: string;
+      duration_ms?: number;
+      variants?: Array<{ bit_rate?: number; content_type?: string; url?: string }>;
     }>;
   };
   meta?: { newest_id?: string; oldest_id?: string; result_count?: number };
@@ -152,7 +154,11 @@ export async function GET(req: NextRequest) {
                 preview_url: m?.preview_image_url || null,
                 width: m?.width || null,
                 height: m?.height || null,
-                alt_text: m?.alt_text || null
+                alt_text: m?.alt_text || null,
+              duration_ms: m?.duration_ms || null,
+              video_url: (m?.variants || [])
+                .filter(v => v.content_type === "video/mp4" && v.url)
+                .sort((a,b)=>(b.bit_rate||0)-(a.bit_rate||0))[0]?.url || null
               }))
               .filter(m => m.url);
           })()
