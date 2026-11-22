@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import { RADIO_TUNE_SRC } from "./radioTune";
 
 type Cluster = string;
 
@@ -137,6 +138,7 @@ export default function RadioDreamsClient({initialFeed}:{initialFeed:Feed}){
   const [liveSeen,setLiveSeen]=useState(0);
 
   const audioCtx=useRef<AudioContext|null>(null);
+  const radioTuneAudio=useRef<HTMLAudioElement|null>(null);
   const audioOnRef=useRef(false);
   const playbackTimer=useRef<number|null>(null);
   const pollTimer=useRef<number|null>(null);
@@ -150,6 +152,17 @@ export default function RadioDreamsClient({initialFeed}:{initialFeed:Feed}){
 
   function playClusterSound(cluster:Cluster){
     if(!audioOnRef.current) return;
+
+    try{
+      const tune=radioTuneAudio.current || new Audio(RADIO_TUNE_SRC);
+      radioTuneAudio.current=tune;
+      tune.pause();
+      tune.currentTime=0;
+      tune.volume=.34;
+      void tune.play();
+    }catch{}
+
+
     const cfg=config.get(cluster);
     if(!cfg) return;
     const AC=window.AudioContext || (window as any).webkitAudioContext;
