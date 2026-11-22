@@ -12,6 +12,8 @@ type Media = {
   width: number | null;
   height: number | null;
   alt_text: string | null;
+  duration_ms?: number | null;
+  video_url?: string | null;
 };
 
 type Dream = {
@@ -153,16 +155,6 @@ export default function RadioDreamsClient({initialFeed}:{initialFeed:Feed}){
   function playClusterSound(cluster:Cluster){
     if(!audioOnRef.current) return;
 
-    try{
-      const tune=radioTuneAudio.current || new Audio(RADIO_TUNE_SRC);
-      radioTuneAudio.current=tune;
-      tune.pause();
-      tune.currentTime=0;
-      tune.volume=.34;
-      void tune.play();
-    }catch{}
-
-
     const cfg=config.get(cluster);
     if(!cfg) return;
     const AC=window.AudioContext || (window as any).webkitAudioContext;
@@ -200,6 +192,16 @@ export default function RadioDreamsClient({initialFeed}:{initialFeed:Feed}){
 
   useEffect(()=>{
     audioOnRef.current=audioOn;
+
+    if(audioOn){
+      const tune=radioTuneAudio.current || new Audio(RADIO_TUNE_SRC);
+      radioTuneAudio.current=tune;
+      tune.loop=true;
+      tune.volume=.22;
+      void tune.play().catch(()=>{});
+    }else if(radioTuneAudio.current){
+      radioTuneAudio.current.pause();
+    }
   },[audioOn]);
 
   useEffect(()=>{
@@ -324,8 +326,17 @@ export default function RadioDreamsClient({initialFeed}:{initialFeed:Feed}){
         rel="noopener noreferrer"
         aria-label="Открыть оригинальный пост в X"
       >
-        {(currentMedia?.url || currentMedia?.preview_url) && <div className="radioMedia">
-          <img src={currentMedia.url || currentMedia.preview_url || ""} alt={currentMedia.alt_text || ""} />
+        {(currentMedia?.video_url || currentMedia?.url || currentMedia?.preview_url) && <div className="radioMedia">
+          {currentMedia.video_url
+            ? <video
+                src={currentMedia.video_url}
+                poster={currentMedia.preview_url || currentMedia.url || undefined}
+                autoPlay
+                muted
+                loop
+                playsInline
+              />
+            : <img src={currentMedia.url || currentMedia.preview_url || ""} alt={currentMedia.alt_text || ""} />}
         </div>}
         <div className="radioMessageText">
           <div className="radioClusterTag">{currentCfg?.icon} {currentCfg?.label}</div>
