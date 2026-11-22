@@ -5,8 +5,19 @@ import RadioDreamsClient from "./RadioDreamsClient";
 export const dynamic = "force-dynamic";
 
 async function getInitialFeed(){
+  const emptyFeed={
+    source:"x_recent_live",
+    date:"",
+    timezone:"Europe/Amsterdam",
+    start:"",
+    end:"",
+    total:0,
+    posts:[],
+    cluster_counts:{}
+  };
+
   const dbUrl=process.env.POSTGRES_URL;
-  if(!dbUrl) throw new Error("Database is not configured");
+  if(!dbUrl) return emptyFeed;
   const db=postgres(dbUrl,{max:1,ssl:"require"});
 
   try{
@@ -20,18 +31,7 @@ async function getInitialFeed(){
       limit 1
     `);
 
-    if(!marker.length){
-      return {
-        source:"x_recent_daily",
-        date:"",
-        timezone:"Europe/London",
-        start:"",
-        end:"",
-        total:0,
-        posts:[],
-        cluster_counts:{}
-      };
-    }
+    if(!marker.length) return emptyFeed;
 
     const start=new Date(marker[0].start_time);
     const end=new Date(marker[0].end_time);
@@ -104,8 +104,11 @@ async function getInitialFeed(){
       posts,
       cluster_counts
     };
+  } catch (error) {
+    console.error("Radio Dreams initial DB seed unavailable; continuing live-only", error);
+    return emptyFeed;
   } finally {
-    await db.end({timeout:2});
+    await db.end({timeout:2}).catch(()=>{});
   }
 }
 
