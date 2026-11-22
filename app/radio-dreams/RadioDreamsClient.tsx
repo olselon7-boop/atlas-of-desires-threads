@@ -135,21 +135,12 @@ const CLUSTERS: Array<{
   wave: OscillatorType;
 }> = [
   { id:"love_relationships", label:"ЛЮБОВЬ", hue:330, freq:392.00, wave:"sine" },
-  { id:"home_belonging", label:"ДОМ", hue:24, freq:261.63, wave:"triangle" },
-  { id:"travel_exploration", label:"ПУТЕШЕСТВИЯ", hue:192, freq:523.25, wave:"sine" },
-  { id:"money_material_security", label:"ДЕНЬГИ", hue:135, freq:329.63, wave:"square" },
-  { id:"career_self_realization", label:"УСПЕХ", hue:54, freq:440.00, wave:"triangle" },
-  { id:"family_children", label:"СЕМЬЯ", hue:6, freq:349.23, wave:"sine" },
-  { id:"creativity_expression", label:"ТВОРЧЕСТВО", hue:286, freq:587.33, wave:"triangle" },
-  { id:"health_wellbeing", label:"ЗДОРОВЬЕ", hue:164, freq:293.66, wave:"sine" },
-  { id:"happiness", label:"СЧАСТЬЕ", hue:52, freq:554.37, wave:"sine" },
-  { id:"education_growth", label:"ОБРАЗОВАНИЕ", hue:205, freq:659.25, wave:"triangle" },
-  { id:"freedom_independence", label:"СВОБОДА", hue:248, freq:493.88, wave:"sine" },
-  { id:"recognition_status", label:"ПРИЗНАНИЕ", hue:42, freq:698.46, wave:"triangle" },
-  { id:"community_justice", label:"МИР", hue:110, freq:220.00, wave:"sine" },
-  { id:"experience_pleasure", label:"ВПЕЧАТЛЕНИЯ", hue:310, freq:783.99, wave:"sine" },
   { id:intimateClusterId, label:intimateClusterLabel, hue:352, freq:246.94, wave:"sawtooth" },
-  { id:"other", label:"ДРУГОЕ", hue:210, freq:311.13, wave:"triangle" },
+  { id:"career_self_realization", label:"САМОРЕАЛИЗАЦИЯ", hue:54, freq:440.00, wave:"triangle" },
+  { id:"money_material_security", label:"МАТЕРИАЛЬНОЕ", hue:135, freq:329.63, wave:"square" },
+  { id:"freedom_independence", label:"СВОБОДА", hue:248, freq:493.88, wave:"sine" },
+  { id:"health_wellbeing", label:"БЛАГОПОЛУЧИЕ", hue:164, freq:293.66, wave:"sine" },
+  { id:"community_justice", label:"МИР", hue:110, freq:220.00, wave:"sine" },
 ];
 
 function cleanText(text:string){
