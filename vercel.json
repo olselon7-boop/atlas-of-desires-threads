@@ -1,9 +1,10 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "crons": [
-    {
+  "schedules": {
+    "radio-dreams-collector": {
+      "schedule": "*/15 * * * *",
       "path": "/api/radio-dreams/collect",
-      "schedule": "*/15 * * * *"
+      "requestMethod": "GET"
     }
-  ]
+  }
 }
