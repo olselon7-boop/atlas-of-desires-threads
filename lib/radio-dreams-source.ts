@@ -97,12 +97,13 @@ async function fetchPage(token:string, query:string, options?:{
 }
 
 export async function fetchRadioDreamPages(token:string, language:"ru"|"en", sinceId?:string|null) {
-  if(sinceId) return [await fetchPage(token,RADIO_DREAM_QUERIES[language],{sinceId})];
-
   const pages:RadioXResponse[]=[];
   let nextToken:string|null=null;
   for(let page=0;page<50;page++){
-    const body=await fetchPage(token,RADIO_DREAM_QUERIES[language],{nextToken});
+    const body=await fetchPage(token,RADIO_DREAM_QUERIES[language],{
+      sinceId:sinceId || null,
+      nextToken
+    });
     pages.push(body);
     nextToken=body.meta?.next_token || null;
     if(!nextToken) break;
