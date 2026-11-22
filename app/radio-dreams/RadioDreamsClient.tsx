@@ -223,6 +223,7 @@ export default function RadioDreamsClient({initialFeed}:{initialFeed:Feed}){
   const [dropTick,setDropTick]=useState(0);
   const [queueSize,setQueueSize]=useState(initialCorpus.length);
   const [liveSeen,setLiveSeen]=useState(0);
+  const [dailyTotal,setDailyTotal]=useState(initialCorpus.length);
 
   const audioCtx=useRef<AudioContext|null>(null);
   const radioTuneAudio=useRef<HTMLAudioElement|null>(null);
@@ -339,15 +340,17 @@ export default function RadioDreamsClient({initialFeed}:{initialFeed:Feed}){
       if(!hydratedRef.current){
         // Initial daily backlog: play chronologically.
         queueRef.current.push(...fresh);
+        setDailyTotal(fresh.length);
         hydratedRef.current=true;
       }else{
         // True live arrivals should be heard next, not after the whole backlog.
         const newestFirst=[...fresh].sort((a,b)=>String(b.created_at).localeCompare(String(a.created_at)));
         queueRef.current.unshift(...newestFirst);
+        setDailyTotal(v=>v+fresh.length);
+        setLiveSeen(v=>v+fresh.length);
       }
 
       setQueueSize(queueRef.current.length);
-      setLiveSeen(v=>v+fresh.length);
       playNext();
     };
 
@@ -398,7 +401,7 @@ export default function RadioDreamsClient({initialFeed}:{initialFeed:Feed}){
       <div className="radioStatus">
         <span className={connected?"liveDot on":"liveDot"} />
         <b>{status}</b>
-        <small>{liveSeen} НОВЫХ · {queueSize} В ОЧЕРЕДИ</small>
+        <small>СЕГОДНЯ: {dailyTotal} УНИКАЛЬНЫХ · +{liveSeen} LIVE · {queueSize} В ОЧЕРЕДИ</small>
         <button onClick={()=>{
           const next=!audioOn;
           setAudioOn(next);
