@@ -571,3 +571,87 @@
 .leaderNote .clusterGlyph{
   opacity:.95;
 }
+
+
+/* p5.js technical infographic — reference-inspired signal atlas */
+.p5Infographic{
+  position:relative;
+  width:100%;
+  min-height:330px;
+  overflow:hidden;
+  border-top:1px solid rgba(255,255,255,.06);
+  border-bottom:1px solid rgba(255,255,255,.10);
+  background:
+    linear-gradient(180deg,rgba(255,255,255,.018),transparent 18%,transparent 82%,rgba(255,255,255,.012));
+}
+.p5Infographic canvas{
+  width:100%!important;
+  height:auto!important;
+  display:block;
+}
+
+.equalizerLegend{
+  display:grid;
+  grid-template-columns:repeat(14,minmax(54px,1fr));
+  gap:12px;
+  align-items:start;
+  padding:12px 10px 4px;
+}
+.eqLegendItem{
+  min-width:0;
+  display:grid;
+  grid-template-rows:30px 26px 22px;
+  justify-items:center;
+  align-items:center;
+  opacity:.68;
+  transition:opacity .25s ease,filter .25s ease;
+}
+.eqLegendItem.active{
+  opacity:1;
+  filter:brightness(1.35);
+}
+.eqLegendItem .eqIcon{
+  width:28px;
+  height:28px;
+  min-width:28px;
+  min-height:28px;
+  margin:0;
+}
+.eqLegendItem .eqLabel{
+  width:100%;
+  height:26px;
+  min-height:0;
+  margin:0;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:7px;
+  line-height:1.05;
+  letter-spacing:.75px;
+  color:#aeb0ad;
+  text-align:center;
+}
+.eqLegendItem .eqCount{
+  height:22px;
+  margin:0;
+  font:15px/1 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  color:#777a76;
+}
+.eqLegendItem.active .eqCount{
+  color:#f2f2ee;
+}
+
+@media(max-width:1100px){
+  .p5Infographic{min-height:300px}
+  .equalizerLegend{
+    grid-template-columns:repeat(7,minmax(64px,1fr));
+    row-gap:18px;
+  }
+}
+@media(max-width:700px){
+  .p5Infographic{min-height:290px}
+  .equalizerLegend{
+    grid-template-columns:repeat(4,minmax(58px,1fr));
+    gap:14px 8px;
+  }
+}
