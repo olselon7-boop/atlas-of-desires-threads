@@ -109,6 +109,13 @@ export async function persistXSearchResponse(input: {
           [postUuid, post.author_id ? pseudonym("x", post.author_id) : null, post.lang || enriched.language_hint, post.text, enriched.canonical_desire, enriched.deep_desire, enriched.expression_type, enriched.aspiration_subject, enriched.is_human_aspiration, enriched.lifecycle_state, enriched.agency, enriched.duration_mentioned, enriched.confidence, enriched.method, true]
         );
         insertedDesires++;
+      } else {
+        // Re-run the latest classifier on already-seen posts so category fixes
+        // are reflected in the Radio corpus without duplicating the desire.
+        await db.unsafe(
+          "update desires set language=$1, surface_expression=$2, canonical_desire=$3, deep_desire=$4, expression_type=$5, aspiration_subject=$6, is_human_aspiration=$7, dream_state=$8, agency=$9, duration_mentioned=$10, confidence=$11, extraction_method=$12 where primary_post_id=$13",
+          [post.lang || enriched.language_hint, post.text, enriched.canonical_desire, enriched.deep_desire, enriched.expression_type, enriched.aspiration_subject, enriched.is_human_aspiration, enriched.lifecycle_state, enriched.agency, enriched.duration_mentioned, enriched.confidence, enriched.method, postUuid]
+        );
       }
     }
 
@@ -118,6 +125,100 @@ export async function persistXSearchResponse(input: {
     );
 
     return { collectionRunId: runId, received: input.response.data?.length || 0, insertedPosts, insertedDesires, insertedMedia, insertedPlaces };
+  } finally {
+    await db.end({ timeout: 2 });
+  }
+}
+
+
+export async function getRadioDreamCursors() {
+  const url = process.env.POSTGRES_URL;
+  if (!url) throw new Error("POSTGRES_URL is not configured");
+  const db = postgres(url, { max: 1, ssl: "require" });
+  try {
+    await db.unsafe(
+      "create table if not exists radio_dream_cursors (language text primary key, cursor text, updated_at timestamptz not null default now())"
+    );
+    const rows = await db.unsafe("select language, cursor from radio_dream_cursors where language in ('ru','en')");
+    const cursors: { ru: string | null; en: string | null } = { ru: null, en: null };
+    for (const row of rows) {
+      if (row.language === "ru" || row.language === "en") cursors[row.language] = row.cursor || null;
+    }
+    return cursors;
+  } finally {
+    await db.end({ timeout: 2 });
+  }
+}
+
+export async function saveRadioDreamCursors(cursors: { ru?: string | null; en?: string | null }) {
+  const url = process.env.POSTGRES_URL;
+  if (!url) throw new Error("POSTGRES_URL is not configured");
+  const db = postgres(url, { max: 1, ssl: "require" });
+  try {
+    await db.unsafe(
+      "create table if not exists radio_dream_cursors (language text primary key, cursor text, updated_at timestamptz not null default now())"
+    );
+    for (const language of ["ru", "en"] as const) {
+      const cursor = cursors[language];
+      if (!cursor) continue;
+      await db.unsafe(
+        "insert into radio_dream_cursors (language, cursor, updated_at) values ($1,$2,now()) on conflict (language) do update set cursor=excluded.cursor, updated_at=now()",
+        [language, cursor]
+      );
+    }
+  } finally {
+    await db.end({ timeout: 2 });
+  }
+}
+
+export async function loadRadioDreamsToday(startIso: string) {
+  const url = process.env.POSTGRES_URL;
+  if (!url) throw new Error("POSTGRES_URL is not configured");
+  const db = postgres(url, { max: 1, ssl: "require" });
+  try {
+    const rows = await db.unsafe(
+      `select
+        rp.source_post_id as id,
+        rp.original_text as text,
+        rp.source_created_at as created_at,
+        d.language,
+        d.deep_desire as cluster,
+        d.dream_state as state,
+        d.agency,
+        d.confidence,
+        rp.permalink,
+        coalesce(
+          json_agg(
+            json_build_object(
+              'type', ma.media_type,
+              'url', ma.source_url,
+              'preview_url', ma.preview_url,
+              'width', ma.width,
+              'height', ma.height,
+              'alt_text', ma.alt_text,
+              'duration_ms', ma.raw_payload->>'duration_ms',
+              'video_url', (
+                select v->>'url'
+                from jsonb_array_elements(coalesce(ma.raw_payload->'variants','[]'::jsonb)) v
+                where v->>'content_type'='video/mp4'
+                order by coalesce((v->>'bit_rate')::bigint,0) desc
+                limit 1
+              )
+            )
+          ) filter (where ma.id is not null),
+          '[]'::json
+        ) as media
+      from desires d
+      join raw_posts rp on rp.id=d.primary_post_id
+      left join media_assets ma on ma.post_id=rp.id
+      where rp.platform='x'
+        and d.is_human_aspiration=true
+        and rp.source_created_at >= $1
+      group by rp.id, d.id
+      order by rp.source_created_at desc`,
+      [startIso]
+    );
+    return rows;
   } finally {
     await db.end({ timeout: 2 });
   }
