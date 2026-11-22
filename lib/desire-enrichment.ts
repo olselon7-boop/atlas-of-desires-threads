@@ -70,10 +70,15 @@ function expressionType(text: string): ExpressionType {
 
 function aspirationSubject(text: string): AspirationSubject {
   const t = " " + text.toLowerCase().replace(/[^a-zа-яё0-9_]+/giu, " ") + " ";
-  if (/\s(?:я|мне|мой|моя|моё|мою|мои|мы|нам|наш|наша|наше|наши|i|me|my|mine|we|our)\s/iu.test(t)) return "self";
-  if (/(?:^|\s)(?:мечтаю|мечтал|мечтала|хочу|хотел|хотела|dreaming|dreamed)(?:\s|$)/iu.test(t)) return "self";
-  if (/\s(?:люди|все|общество|people|everyone)\s/iu.test(t)) return "collective";
-  if (/\s(?:он|она|они|его|ее|её|их|he|she|they|his|her|their)\s/iu.test(t)) return "other";
+
+  // Strict singular first person only.
+  if (/\s(?:я|мне|меня|мой|моя|моё|моего|моей|мою|мои|моих|i|me|my|mine)\s/iu.test(t)) return "self";
+  if (/(?:^|\s)(?:мечтаю|хочу|хотелось|i\s+dream|i\s+want|i\s+wish|i\s+hope)(?:\s|$)/iu.test(t)) return "self";
+
+  // Explicitly reject collective and other-person formulations.
+  if (/\s(?:мы|нам|нас|наш|наша|наше|наши|we|us|our|ours)\s/iu.test(t)) return "collective";
+  if (/\s(?:ты|тебя|тебе|твой|вы|ваш|он|она|они|его|ее|её|их|you|your|he|she|they|his|her|their)\s/iu.test(t)) return "other";
+
   return "unknown";
 }
 
@@ -94,15 +99,24 @@ function inferDeepDesire(text: string): DeepDesire {
   return /мечт|dream|wish|hope|хочу/iu.test(text) ? "other" : "unknown";
 }
 
+function hasExplicitFirstPersonAspiration(text: string) {
+  const t = text.toLowerCase();
+
+  const ru = /(?:^|[.!?]\s*|\s)(?:я\s+(?:мечтаю|хочу|надеюсь|желаю)|мне\s+(?:хочется|бы\s+хотелось)|моя\s+мечта\s*[-—:]?|моей\s+мечтой\s+(?:является|было|будет))/iu;
+  const en = /(?:^|[.!?]\s*|\s)(?:i\s+(?:dream|want|wish|hope|long|would\s+love)|my\s+dream\s+(?:is|was|would\s+be|has\s+always\s+been)|i(?:'ve|\s+have)\s+always\s+dreamed\s+of)/iu;
+
+  return ru.test(t) || en.test(t);
+}
+
 export function enrichDesireText(text: string) {
   const detected = detectDesire(text);
   const type = expressionType(text);
   const subject = aspirationSubject(text);
-  const firstPerson = subject === "self" || subject === "collective";
+  const firstPerson = subject === "self" && hasExplicitFirstPersonAspiration(text);
   const isHumanAspiration =
     type === "aspiration" &&
     firstPerson &&
-    !/(?:\byou\b|\byour\b|\bты\b|\bтебя\b|\bтвой\b|\bваш\b)/iu.test(text.replace(/^(?:i|я)\b.{0,20}/iu,"")) &&
+    !/(?:\byou\b|\byour\b|\bhe\b|\bshe\b|\bthey\b|\bhis\b|\bher\b|\btheir\b|\bты\b|\bтебя\b|\bтвой\b|\bвы\b|\bваш\b|\bон\b|\bона\b|\bони\b|\bего\b|\bеё\b|\bих\b)/iu.test(text.replace(/^(?:i|я)\b.{0,24}/iu,"")) &&
     !/(?:sleep|asleep|nightmare|daymare|every night|while i sleep|when i sleep|во сне|приснил|приснилось|снилось|мне снится|сон про|сны про|сны о)/iu.test(text) &&
     !/(?:\bты\s+(?:жив[её]шь|живешь)\s+(?:своей|свою)\s+мечт|\bживи\s+(?:своей|свою)\s+мечт|\bвы\s+(?:жив[её]те|живете)\s+(?:своей|свою)\s+мечт|\byou(?:'re| are)\s+living\s+your\s+dream|\blive\s+your\s+dream|\byou\s+live\s+your\s+dream)/iu.test(text) &&
     !/^rt\s*@/iu.test(text);
